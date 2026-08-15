@@ -1,0 +1,96 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Ignored default folder with query files
+/queries/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# ==========================================
+# Binary & Build Outputs
+# ==========================================
+/bin/
+/dist/
+*.exe
+*.exe;
+*.dll
+*.so
+*.dylib
+gateway-middleware
+
+# ==========================================
+# Database & Local Runtime Artifacts
+# ==========================================
+# SQLite database files and WAL/journal locks
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Log files & runtime directories
+*.log
+/logs/
+/tmp/
+
+# ==========================================
+# Cursor IDE & VS Code
+# ==========================================
+# Cursor settings, index cache, & workspace history
+.cursor/
+.cursorrules
+.history/
+*.code-workspace
+
+# VS Code shared configurations (uncomment specific files if sharing with team)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ==========================================
+# JetBrains GoLand / IntelliJ
+# ==========================================
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# ==========================================
+# macOS System Artifacts
+# ==========================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Icon
+Network Trash Folder
+Temporary Items
+
+# ==========================================
+# Linux System & Tooling Artifacts
+# ==========================================
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==========================================
+# Go Dependency & Environment Files
+# ==========================================
+# Local environment secret overrides
+.env
+.env.local
+.env.*.local
+
+# Coverage / Test Profile Data
+*.out
+*.test
+*.prof
