@@ -5,7 +5,7 @@ mkdir -p middleware\{cmd/gateway,config,pkg/api,pkg/dns,pkg/interceptor,pkg/modu
 cd middleware
 go mod init middleware
 ```
-#### Importing Dependencies
+#### Imported Dependencies
 ```bash
 go get github.com/miekg/dns  # Wire-format DNS parser & server.
 go get github.com/google/gopacket # Packet parsing (TLS SNI extraction). 
