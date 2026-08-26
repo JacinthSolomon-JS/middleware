@@ -42,3 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial Git Commit with Directory sturcture and dependencies.
+
+## [v0.1] - 26-08-2026
+
+### Added
+- Security Modules, Server with interceptor.
