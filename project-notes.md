@@ -14,3 +14,14 @@ go get github.com/florianl/go-nfqueue/v2 # Linux NFQUEUE userspace binding.
 go get github.com/gorilla/websocket # WebSocket upgrader and live client connection managment for real time.
 go get github.com/gin-gonic/gin # High-Performance REST API routing.
 ```
+
+#### Test Trials
+
+##### Test 1
+```Bash
+go run cmd/gateway/main.go # Run the middleware with port 1053
+dig @127.0.0.1 -p 1053 google.com # Normal Domain resolve to 1.1.1.1 (cloudflare)
+dig @127.0.0.1 -p 1053 malware.com # Static Blocklist Domain (Sink-hole to 0.0.0.0)
+dig @127.0.0.1 -p 1053 x89a1zq98lbz19q7m3.biz # Zero-Day DGA Domain (High Entropy - Should BLOCK) {Didn't work}
+```
+The DGA High-Entropy Domain didn't work and did not BLOCK the domain.
