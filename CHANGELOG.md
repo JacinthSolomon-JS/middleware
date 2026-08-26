@@ -47,3 +47,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Security Modules, Server with interceptor.
+- bash scripts for tag-releases and packages
