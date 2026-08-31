@@ -53,7 +53,7 @@ func testSimulatedTLSPackets(inspector *interceptor.PacketInspector) {
 	tctxDGA := pipeline.NewTrafficContext("Test-02", nil, dgaDomain, 0)
 	engine.RegisterModule(modules.NewEntropyModule(3.8))
 
-	fmt.Printf("\nSimulating SNI inspection for DGA domain: %s..\n", dgaDomain)
+	fmt.Printf("Simulating SNI inspection for DGA domain: %s..\n", dgaDomain)
 	engine.Process(nil, tctxDGA)
 	fmt.Printf("Result: Action:%s, Reason:%s\n", tctxDGA.FinalAction, tctxDGA.BlockReason)
 }
