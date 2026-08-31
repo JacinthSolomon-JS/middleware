@@ -41,10 +41,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v0.1] - 15-08-2026
 
 ### Added
-- Initial Git Commit with Directory sturcture and dependencies.
+- Initial Git Commit with Directory structure and dependencies.
 
 ## [v0.1] - 22-08-2026
 
 ### Added
 - Security Modules, Server with interceptor.
-- bash scripts for tag-releases and packages
+- bash scripts for tag-releases and packages.
+
+## [v0.1] - 31-08-2026
+
+### Added
+- Implemented TLS SNI Parser (Parses raw TCP packet payloads to extract the target domain from the TLS handshake extension).
+- Implemented Packet Handler & Inspector.
+- Added TLS SNI Inspector in main.go
