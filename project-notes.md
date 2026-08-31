@@ -15,6 +15,24 @@ go get github.com/gorilla/websocket # WebSocket upgrader and live client connect
 go get github.com/gin-gonic/gin # High-Performance REST API routing.
 ```
 
+#### Architecture Overview
+```plaintext
+[ Client Application ] ──(TCP :443 TLS Handshake)──> [ Linux Kernel NFQUEUE ]
+                                                             │
+                                                             ▼
+                                                    [ Go Interceptor ]
+                                                             │
+                                                  1. Parse TCP & TLS Client Hello
+                                                  2. Extract SNI (e.g. "malware.com")
+                                                             │
+                                                             ▼
+                                                    [ Pipeline Engine ]
+                                                   (Blocklist / DGA Check)
+                                                             │
+                                                             ▼
+                                                Verdict: NF_ACCEPT or NF_DROP
+```
+
 #### Test Trials
 
 ##### Test 1
