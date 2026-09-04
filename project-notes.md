@@ -33,6 +33,33 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
                                                 Verdict: NF_ACCEPT or NF_DROP
 ```
 
+#### Entropy Domain
+##### Low Entropy Domains (Readable)
+Entropy typically <3.0
+```markdown
+google.com
+yahoo.com
+microsoft.com
+example.com
+aaaaaaaaaa.com
+```
+##### Medium Entropy Domains (Longer Words and Subdomains)
+```markdown
+wikipedia.org
+instagram.com
+login.microsoftonline.com
+appsync-api.us-east-1.avsvmcloud.com // Cloud/CDN patterns that sometimes trigger false positives in basic filters
+```
+##### High Entropy Domains (Random and Auto-Generated)
+Entropy typically >3.5 to 4.5+
+```markdown
+7x9q2m4k8p.com
+kjhgfdsazx.com
+q398rhflkjqwfg.com
+sfqpit75pjh525siewar2dtgt5.com
+zxcvbnmasdflkjgh.com
+```
+
 #### Test Trials
 
 ##### Test 1
