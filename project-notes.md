@@ -19,17 +19,17 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
 ```plaintext
 [ Client Application ] ──(TCP :443 TLS Handshake)──> [ Linux Kernel NFQUEUE ]
                                                              │
-                                                             ▼
+                                                             v
                                                     [ Go Interceptor ]
                                                              │
                                                   1. Parse TCP & TLS Client Hello
                                                   2. Extract SNI (e.g. "malware.com")
                                                              │
-                                                             ▼
+                                                             v
                                                     [ Pipeline Engine ]
                                                    (Blocklist / DGA Check)
                                                              │
-                                                             ▼
+                                                             v
                                                 Verdict: NF_ACCEPT or NF_DROP
 ```
 
