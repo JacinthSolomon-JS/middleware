@@ -53,6 +53,7 @@ appsync-api.us-east-1.avsvmcloud.com // Cloud/CDN patterns that sometimes trigge
 ##### High Entropy Domains (Random and Auto-Generated)
 Entropy typically >3.5 to 4.5+
 ```markdown
+x89a1zq98lbz19q7m3.biz
 7x9q2m4k8p.com
 kjhgfdsazx.com
 q398rhflkjqwfg.com
