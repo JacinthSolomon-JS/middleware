@@ -24,11 +24,7 @@ func main() {
 
 	engine.RegisterModule(blocklist)
 
-<<<<<<< HEAD
 	entropyDetector := modules.NewEntropyModule(3.2)
-=======
-	entropyDetector := modules.NewEntropyModule(3.8)
->>>>>>> 1ad61f0917d4437931370f3ee94a5fdfab9a011b
 	engine.RegisterModule(entropyDetector)
 
 	inspector := interceptor.NewPacketInspector(engine)

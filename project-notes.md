@@ -19,17 +19,12 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
 ```plaintext
 [ Client Application ] ──(TCP :443 TLS Handshake)──> [ Linux Kernel NFQUEUE ]
                                                              │
-<<<<<<< HEAD
                                                              ▼
-=======
-                                                             v
->>>>>>> 1ad61f0917d4437931370f3ee94a5fdfab9a011b
                                                     [ Go Interceptor ]
                                                              │
                                                   1. Parse TCP & TLS Client Hello
                                                   2. Extract SNI (e.g. "malware.com")
                                                              │
-<<<<<<< HEAD
                                                              ▼
                                                     [ Pipeline Engine ]
                                                    (Blocklist / DGA Check)
@@ -38,44 +33,6 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
                                                 Verdict: NF_ACCEPT or NF_DROP
 ```
 
-=======
-                                                             v
-                                                    [ Pipeline Engine ]
-                                                   (Blocklist / DGA Check)
-                                                             │
-                                                             v
-                                                Verdict: NF_ACCEPT or NF_DROP
-```
-
-#### Entropy Domain
-##### Low Entropy Domains (Readable)
-Entropy typically <3.0
-```markdown
-google.com
-yahoo.com
-microsoft.com
-example.com
-aaaaaaaaaa.com
-```
-##### Medium Entropy Domains (Longer Words and Subdomains)
-```markdown
-wikipedia.org
-instagram.com
-login.microsoftonline.com
-appsync-api.us-east-1.avsvmcloud.com // Cloud/CDN patterns that sometimes trigger false positives in basic filters
-```
-##### High Entropy Domains (Random and Auto-Generated)
-Entropy typically >3.5 to 4.5+
-```markdown
-x89a1zq98lbz19q7m3.biz
-7x9q2m4k8p.com
-kjhgfdsazx.com
-q398rhflkjqwfg.com
-sfqpit75pjh525siewar2dtgt5.com
-zxcvbnmasdflkjgh.com
-```
-
->>>>>>> 1ad61f0917d4437931370f3ee94a5fdfab9a011b
 #### Test Trials
 
 ##### Test 1
@@ -86,3 +43,5 @@ dig @127.0.0.1 -p 1053 malware.com # Static Blocklist Domain (Sink-hole to 0.0.0
 dig @127.0.0.1 -p 1053 x89a1zq98lbz19q7m3.biz # Zero-Day DGA Domain (High Entropy - Should BLOCK) {Didn't work}
 ```
 The DGA High-Entropy Domain didn't work and did not BLOCK the domain.
+
+Now DGA High-Entropy Domain work.
