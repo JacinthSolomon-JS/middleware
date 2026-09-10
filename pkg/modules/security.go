@@ -47,7 +47,11 @@ func (e *EntropyModule) Name() string {
 }
 
 func (e *EntropyModule) Inspect(ctx context.Context, tctx *pipeline.TrafficContext) (bool, error) {
+<<<<<<< HEAD
 	parts := strings.Split(strings.TrimSuffix(tctx.Domain, "."), ".")
+=======
+	parts := strings.Split(strings.TrimSuffix(tctx.Domain, "."), ",")
+>>>>>>> 1ad61f0917d4437931370f3ee94a5fdfab9a011b
 	if len(parts) == 0 {
 		return false, nil
 	}
