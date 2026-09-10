@@ -51,11 +51,7 @@ func testSimulatedTLSPackets(inspector *interceptor.PacketInspector) {
 
 	dgaDomain := "x89a1zq98lbz19q7m3.biz"
 	tctxDGA := pipeline.NewTrafficContext("Test-02", nil, dgaDomain, 0)
-<<<<<<< HEAD
 	engine.RegisterModule(modules.NewEntropyModule(3.2))
-=======
-	engine.RegisterModule(modules.NewEntropyModule(3.8))
->>>>>>> 1ad61f0917d4437931370f3ee94a5fdfab9a011b
 
 	fmt.Printf("Simulating SNI inspection for DGA domain: %s..\n", dgaDomain)
 	engine.Process(nil, tctxDGA)
