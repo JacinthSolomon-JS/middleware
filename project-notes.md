@@ -14,6 +14,8 @@ go get github.com/florianl/go-nfqueue/v2 # Linux NFQUEUE userspace binding.
 go get github.com/gorilla/websocket # WebSocket upgrader and live client connection managment for real time.
 go get github.com/gin-gonic/gin # High-Performance REST API routing.
 ```
+
+---
 ## Notes
 
 1.  **[SOLVED]** Common Errors for initializing IP-Tables ``` [ERROR] IPTables failed: exec: "iptables": executable file not found in $PATH ``` 
@@ -53,7 +55,7 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
                                                              ▼
                                                 Verdict: NF_ACCEPT or NF_DROP
 ```
-
+---
 ### Test Trials
 
 ##### Test 1
