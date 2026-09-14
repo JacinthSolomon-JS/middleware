@@ -40,24 +40,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.1] - 15-08-2026
 
-### Added
+`Added`
 - Initial Git Commit with Directory structure and dependencies.
 
 ## [v0.1] - 22-08-2026
 
-### Added
+`Added`
 - Security Modules, Server with interceptor.
 - bash scripts for tag-releases and packages.
 
 ## [v0.1] - 31-08-2026
 
-### Added
+`Added`
 - Implemented TLS SNI Parser (Parses raw TCP packet payloads to extract the target domain from the TLS handshake extension).
 - Implemented Packet Handler & Inspector.
 - Added TLS SNI Inspector in main.go
 
 ## [v0.1] - 14-09-2026
 
-### Changed
+`Changed`
 - Updated proper NFQueueHandler, HandlePacket functions.
 - Updated NFQUEUE initializer and proper Handler functions on main.go.
