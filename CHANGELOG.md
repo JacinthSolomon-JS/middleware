@@ -55,3 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented TLS SNI Parser (Parses raw TCP packet payloads to extract the target domain from the TLS handshake extension).
 - Implemented Packet Handler & Inspector.
 - Added TLS SNI Inspector in main.go
+
+## [v0.1] - 14-09-2026
+
+### Changed
+- Updated proper NFQueueHandler, HandlePacket functions.
+- Updated NFQUEUE initializer and proper Handler functions on main.go.

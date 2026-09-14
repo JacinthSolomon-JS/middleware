@@ -14,8 +14,29 @@ go get github.com/florianl/go-nfqueue/v2 # Linux NFQUEUE userspace binding.
 go get github.com/gorilla/websocket # WebSocket upgrader and live client connection managment for real time.
 go get github.com/gin-gonic/gin # High-Performance REST API routing.
 ```
+## Notes
 
-#### Architecture Overview
+1.  **[SOLVED]** Common Errors for initializing IP-Tables ``` [ERROR] IPTables failed: exec: "iptables": executable file not found in $PATH ``` 
+    - Install iptables via system packet manager  
+      ```bash
+      # Debian/Ubuntu/Kali
+      sudo apt update && sudo apt install -y iptables
+      
+      # Arch based
+      sudo pacman -S iptables
+      
+      # RHEL/CentOS/Fedora
+      sudo dnf install iptables-services iptables
+      ```
+    - Run with Root Privileges 
+      ```bash
+      # Elevated Root Privileges
+      sudo go run . 
+      # or use  compiled binary
+      sudo go build main.go && sudo ./main      
+      ```
+
+### Architecture Overview
 ```plaintext
 [ Client Application ] ──(TCP :443 TLS Handshake)──> [ Linux Kernel NFQUEUE ]
                                                              │
@@ -33,7 +54,7 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
                                                 Verdict: NF_ACCEPT or NF_DROP
 ```
 
-#### Test Trials
+### Test Trials
 
 ##### Test 1
 ```Bash
