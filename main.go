@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"middleware/pkg/api"
 	"middleware/pkg/dns"
 	"middleware/pkg/interceptor"
 	"middleware/pkg/modules"
@@ -55,6 +56,17 @@ func main() {
 
 	// Starting Database
 	db.Start(ctx)
+
+	// WebSocket Hub & API Server
+	wsHub := api.NewWSHub()
+	go wsHub.Run()
+
+	apiServer := api.NewServer("0.0.0.0:8080", db, wsHub)
+	go func() {
+		if err := apiServer.Start(); err != nil {
+			log.Fatalf("\n[ERROR] API Server failed: %v", err)
+		}
+	}()
 
 	// DNS Resolver Server Setup
 	fmt.Println("\nStarting Local DNS Resolver on UDP 127.0.0.1:1053")
