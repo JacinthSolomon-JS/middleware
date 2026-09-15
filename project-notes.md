@@ -15,6 +15,15 @@ go get github.com/gorilla/websocket # WebSocket upgrader and live client connect
 go get github.com/gin-gonic/gin # High-Performance REST API routing.
 ```
 
+#### Configuring Linux Kernel to Forwording & IP Setup
+```bash
+# Enable forwarding in runtime
+sudo sysctl -w net.ipv4.ip_forward=1
+
+# Persists across reboot
+echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+```
+
 ---
 ## Notes
 
@@ -37,7 +46,7 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
       # or use  compiled binary
       sudo go build main.go && sudo ./main      
       ```
-
+---
 ### Architecture Overview
 ```plaintext
 [ Client Application ] ──(TCP :443 TLS Handshake)──> [ Linux Kernel NFQUEUE ]
@@ -55,7 +64,69 @@ go get github.com/gin-gonic/gin # High-Performance REST API routing.
                                                              ▼
                                                 Verdict: NF_ACCEPT or NF_DROP
 ```
----
+
+#### Traffic Flow
+```plaintext
+[ LAN Client Device ]
+    │ (Gateway IP: 192.168.1.1)
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Linux Hardware Gateway / VM                                 │
+│                                                             │
+│  1. Forwarding Kernel Flag: net.ipv4.ip_forward = 1         │
+│  2. nftables Rules:                                         │
+│     • UDP 53  ──> Redirect to Go Local DNS (:1053)          │
+│     • TCP 443 ──> Queue to NFQUEUE (num 0)                  │
+│                                                             │
+│  3. Go Middleware Process:                                  │
+│     • Listens on NFQUEUE 0 via libnetfilter_queue           │
+│     • Parses TLS SNI ClientHello                            │
+│     • Verdict: NF_ACCEPT (Forward) or NF_DROP (Block)       │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+                       [ WAN / Internet ]
+```
+
+#### Storage Architecture
+```plaintext
+               ┌───────────────────────────────────────────────┐
+               │    Pipeline Engine (DNS / SNI Inspector)      │
+               └───────────────────────┬───────────────────────┘
+                                       │ (Async Log Event)
+                                       ▼
+                       ┌───────────────────────────────┐
+                       │   Buffered Channel (10,000)   │
+                       └───────────────┬───────────────┘
+                                       │
+                                       ▼
+                       ┌───────────────────────────────┐
+                       │  Batch Worker Thread (Go)     │
+                       │  (Flushes every 2s or 100 logs) │
+                       └───────────────┬───────────────┘
+                                       │
+                                       ▼
+                       ┌───────────────────────────────┐
+                       │   Embedded SQLite Database    │
+                       └───────────────────────────────┘
+```
+
+#### Web Dashboard and Real time WebSocket with Storage
+```plaintext
+                               ┌──────────────────────────────────┐
+                               │   Go Gateway Daemon              │
+                               │                                  │
+┌────────────────────┐         │   ┌──────────────────────────┐   │
+│ Web Dashboard      │ ──REST──┼──>│  Gin HTTP API Router     │   │
+│ (React / VanillaJS)│ <──WS───┼───┤  WebSocket Hub           │   │
+└────────────────────┘         │   └────────────┬─────────────┘   │
+                               │                │                 │
+                               │                ▼                 │
+                               │   ┌──────────────────────────┐   │
+                               │   │ SQLite Storage Engine    │   │
+                               │   └──────────────────────────┘   │
+                               └──────────────────────────────────┘
+```
 ### Test Trials
 
 ##### Test 1
