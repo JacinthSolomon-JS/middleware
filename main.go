@@ -8,10 +8,12 @@ import (
 	"middleware/pkg/interceptor"
 	"middleware/pkg/modules"
 	"middleware/pkg/pipeline"
+	"middleware/pkg/storage"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/florianl/go-nfqueue"
 )
@@ -39,19 +41,30 @@ func main() {
 	fmt.Println("\nTesting: TLS SNI Packet Extraction")
 	testSimulatedTLSPackets()
 
+	// Setup Signal Handling & Context for Graceful Shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Initialize Database Log
+	fmt.Println("\nInitialized Database")
+	db, err := storage.NewDatabase("gateway.db", 10000, 50, 1*time.Second)
+	if err != nil {
+		log.Fatalf("\n[ERROR] Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Starting Database
+	db.Start(ctx)
+
 	// DNS Resolver Server Setup
 	fmt.Println("\nStarting Local DNS Resolver on UDP 127.0.0.1:1053")
-	dnsServer := dns.NewServer("127.0.0.1:1053", "1.1.1.1:53", engine)
+	dnsServer := dns.NewServer("127.0.0.1:1053", "1.1.1.1:53", engine, db)
 	go func() {
 		if err := dnsServer.Start(); err != nil {
 
 			log.Printf("DNS Server failed to start: %v", err)
 		}
 	}()
-
-	// Setup Signal Handling & Context for Graceful Shutdown
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	sigChain := make(chan os.Signal, 1)
 	signal.Notify(sigChain, syscall.SIGINT, syscall.SIGTERM)

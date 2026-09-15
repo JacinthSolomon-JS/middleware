@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"middleware/pkg/pipeline"
+	"middleware/pkg/storage"
 	"net"
 	"strings"
 
@@ -14,12 +15,14 @@ type Server struct {
 	engine    *pipeline.Engine
 	dnsServer *dns.Server
 	upstream  string
+	db        *storage.Database
 }
 
-func NewServer(addr string, upstream string, engine *pipeline.Engine) *Server {
+func NewServer(addr string, upstream string, engine *pipeline.Engine, db *storage.Database) *Server {
 	s := &Server{
 		engine:   engine,
 		upstream: upstream,
+		db:       db,
 	}
 
 	mux := dns.NewServeMux()
@@ -44,7 +47,10 @@ func (s *Server) handleDNSQuery(w dns.ResponseWriter, r *dns.Msg) {
 	m.Compress = false
 
 	if len(r.Question) == 0 {
-		w.WriteMsg(m)
+		err := w.WriteMsg(m)
+		if err != nil {
+			return
+		}
 		return
 	}
 
@@ -57,6 +63,16 @@ func (s *Server) handleDNSQuery(w dns.ResponseWriter, r *dns.Msg) {
 
 	s.engine.Process(context.Background(), tctx)
 
+	s.db.Log(storage.LogEvent{
+		Timestamp:   tctx.Timestamp,
+		Protocol:    "DNS",
+		ClientIP:    clientIP,
+		Target:      domain,
+		Action:      tctx.FinalAction.String(),
+		BlockReason: tctx.BlockReason,
+		MatchedBy:   tctx.MatchedBy,
+	})
+
 	if tctx.FinalAction == pipeline.ActionBlock {
 		fmt.Printf("[BLOCKED] %s | Client: %s | Reason: %s (by %s) \n", domain, clientIP, tctx.BlockReason, tctx.MatchedBy)
 		if q.Qtype == dns.TypeA {
@@ -65,7 +81,10 @@ func (s *Server) handleDNSQuery(w dns.ResponseWriter, r *dns.Msg) {
 		} else {
 			m.Rcode = dns.RcodeNameError
 		}
-		w.WriteMsg(m)
+		err := w.WriteMsg(m)
+		if err != nil {
+			return
+		}
 		return
 	}
 
