@@ -47,6 +47,79 @@ echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
       sudo go build main.go && sudo ./main      
       ```
 ---
+
+##### Pre-Configured Blocklists
+These are sample categorized pre-configured blocklists
+```markdown
+1. GENERAL ADBLOCKING & PRIVACY (10 Lists)
+
+{"oisd-small", "OISD Small (Basic)", "General Adblocking & Privacy", "https://small.oisd.nl"},
+{"oisd-big", "OISD Big (Comprehensive)", "General Adblocking & Privacy", "https://big.oisd.nl"},
+{"steven-black", "StevenBlack Unified Hosts", "General Adblocking & Privacy", "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"},
+{"adguard-dns", "AdGuard DNS Main Filter", "General Adblocking & Privacy", "https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt"},
+{"adguard-base", "AdGuard Base Filter", "General Adblocking & Privacy", "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_2_English/filter.txt"},
+{"adguard-mobile", "AdGuard Mobile Ads", "General Adblocking & Privacy", "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_11_Mobile/filter.txt"},
+{"easylist", "EasyList Main", "General Adblocking & Privacy", "https://easylist.to/easylist/easylist.txt"},
+{"easyprivacy", "EasyPrivacy Tracker Block", "General Adblocking & Privacy", "https://easylist.to/easylist/easyprivacy.txt"},
+{"pgl-yoyo", "Peter Lowe's Ad & Tracking List", "General Adblocking & Privacy", "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"},
+{"duckduckgo-radar", "DuckDuckGo Tracker Radar", "General Adblocking & Privacy", "https://raw.githubusercontent.com/duckduckgo/tracker-radar/main/domains/US.txt"},
+
+2. SECURITY, MALWARE & PHISHING (12 Lists)
+
+{"urlhaus", "URLHaus Malware Domains", "Security & Phishing", "https://urlhaus.abuse.ch/downloads/hostfile/"},
+{"phisharmy", "PhishArmy Extended List", "Security & Phishing", "https://phish.army/download/phishing_army_blocklist_extended.txt"},
+{"openphish", "OpenPhish Active Feed", "Security & Phishing", "https://openphish.com/feed.txt"},
+{"malwaredomainlist", "MalwareDomainList Main", "Security & Phishing", "https://www.malwaredomainlist.com/hostslist/hosts.txt"},
+{"threatfox", "ThreatFox IOC Malicious Domains", "Security & Phishing", "https://threatfox.abuse.ch/downloads/hostfile/"},
+{"vxvault", "VX Vault URL List", "Security & Phishing", "http://vxvault.net/URL_List.php"},
+{"scam-blocklist", "Malicious Scam Domains", "Security & Phishing", "https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt"},
+{"digitalside-threat", "DigitalSide Threat Intel OSINT", "Security & Phishing", "https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt"},
+{"alienvault-reputation", "AlienVault IP/Domain Reputation", "Security & Phishing", "https://reputation.alienvault.com/reputation.data"},
+{"cert-pl", "CERT Poland Warn List", "Security & Phishing", "https://cert.pl/posts/2020/03/ostrzezenia_phishing/list.txt"},
+{"stamparm-ipsum", "IPsum Malicious Network Feed", "Security & Phishing", "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt"},
+{"blocklist-de", "Blocklist.de Fail2Ban IPs", "Security & Phishing", "https://lists.blocklist.de/lists/all.txt"},
+
+3. PARENTAL CONTROL & ADULT CONTENT (10 Lists)
+
+{"steven-porn", "StevenBlack Porn Blocklist", "Parental Control & Adult", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts"},
+{"cleandns-adult", "CleanBrowsing Adult Filter", "Parental Control & Adult", "https://raw.githubusercontent.com/CleanBrowsing/dns-blocklists/master/adult-blocklist.txt"},
+{"adguard-adult", "AdGuard Family Adult Filter", "Parental Control & Adult", "https://raw.githubusercontent.com/AdguardTeam/AdGuardSDNSFilter/master/Filters/family.txt"},
+{"nsfw-hosts", "NSFW Community Blocklist", "Parental Control & Adult", "https://raw.githubusercontent.com/Sinfonietta/hostfiles/master/pornography-hosts"},
+{"big-daddys-porn", "Big Daddy's NSFW Blocklist", "Parental Control & Adult", "https://raw.githubusercontent.com/badmojc/127.0.0.1/master/porn"},
+{"chadmayfield-adult", "Chad Mayfield Adult Blocklist", "Parental Control & Adult", "https://raw.githubusercontent.com/chadmayfield/pihole-blocklists/master/AdultForPiHole.txt"},
+{"oliver-adult", "Oliver Hough Adult List", "Parental Control & Adult", "https://raw.githubusercontent.com/oliverhough89/Adult-Block-List/master/hosts"},
+{"blocklistproject-porn", "BlockList Project Adult", "Parental Control & Adult", "https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt"},
+{"steven-gambling", "StevenBlack Gambling Block", "Parental Control & Adult", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling/hosts"},
+{"blocklistproject-gambling", "BlockList Project Gambling", "Parental Control & Adult", "https://raw.githubusercontent.com/blocklistproject/Lists/master/gambling.txt"},
+
+4. CRYPTOMINING & FRAUD (6 Lists)
+
+{"coinblocker", "CoinBlockerLists Mining", "Cryptomining & Fraud", "https://raw.githubusercontent.com/Zerodot0/CoinBlockerLists/master/list.txt"},
+{"no-coin", "NoCoin Cryptomining Filter", "Cryptomining & Fraud", "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt"},
+{"crypto-scamdb", "Crypto ScamDB Phishing/Scams", "Cryptomining & Fraud", "https://raw.githubusercontent.com/MyEtherWallet/ethereum-lists/master/src/addresses/out/hosts-format.txt"},
+{"steven-crypto", "StevenBlack Crypto/Crypto-Jacking", "Cryptomining & Fraud", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts"},
+{"blocklistproject-crypto", "BlockList Project Crypto Domains", "Cryptomining & Fraud", "https://raw.githubusercontent.com/blocklistproject/Lists/master/crypto.txt"},
+{"miner-gate", "In-Browser Miner Gateways", "Cryptomining & Fraud", "https://raw.githubusercontent.com/Energen/miner-blocklist/master/miners.txt"},
+
+5. SOCIAL MEDIA TRACKING (6 Lists)
+
+{"steven-social", "StevenBlack Social Media Block", "Social Media Tracking", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social/hosts"},
+{"adguard-social", "AdGuard Social Media Filter", "Social Media Tracking", "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_4_Social/filter.txt"},
+{"blocklistproject-facebook", "BlockList Project Facebook", "Social Media Tracking", "https://raw.githubusercontent.com/blocklistproject/Lists/master/facebook.txt"},
+{"blocklistproject-twitter", "BlockList Project Twitter/X", "Social Media Tracking", "https://raw.githubusercontent.com/blocklistproject/Lists/master/twitter.txt"},
+{"blocklistproject-tiktok", "BlockList Project TikTok", "Social Media Tracking", "https://raw.githubusercontent.com/blocklistproject/Lists/master/tiktok.txt"},
+{"blocklistproject-youtube", "BlockList Project YouTube Trackers", "Social Media Tracking", "https://raw.githubusercontent.com/blocklistproject/Lists/master/youtube.txt"},
+
+6. TELEMETRY & SMART DEVICES (6 Lists)
+
+{"crazy-max-windows", "CrazyMax Windows Telemetry", "Telemetry & Smart Devices", "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt"},
+{"smart-tv-telemetry", "Smart TV Telemetry (Samsung/LG/Roku)", "Telemetry & Smart Devices", "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt"},
+{"amazon-fire-telemetry", "Amazon FireTV Telemetry", "Telemetry & Smart Devices", "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/AmazonFireTV.txt"},
+{"apple-telemetry", "Apple Telemetry Blocklist", "Telemetry & Smart Devices", "https://raw.githubusercontent.com/blocklistproject/Lists/master/apple.txt"},
+{"telemetry-mobile", "Android / iOS OEM Telemetry", "Telemetry & Smart Devices", "https://raw.githubusercontent.com/blocklistproject/Lists/master/tracking.txt"},
+{"steven-fakenews", "StevenBlack Fake News Guard", "Telemetry & Smart Devices", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews/hosts"},
+```
+
 ### Architecture Overview
 ```plaintext
 [ Client Application ] ──(TCP :443 TLS Handshake)──> [ Linux Kernel NFQUEUE ]
