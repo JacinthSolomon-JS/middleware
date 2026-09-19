@@ -16,7 +16,7 @@ type Server struct {
 }
 
 func (s *Server) Start() error {
-	fmt.Printf("[API] Dashboard Server listening on https://%s\n", s.addr)
+	fmt.Printf("[API] Dashboard Server listening on http://%s\n", s.addr)
 	return s.router.Run(s.addr)
 }
 
