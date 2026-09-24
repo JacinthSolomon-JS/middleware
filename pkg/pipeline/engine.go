@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
 type Engine struct {
 	mu      sync.RWMutex
 	modules []SecurityModule
+	monitor atomic.Bool
 }
 
 func NewEngine() *Engine {
