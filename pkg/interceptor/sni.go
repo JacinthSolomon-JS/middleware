@@ -3,6 +3,7 @@ package interceptor
 import (
 	"encoding/binary"
 	"errors"
+	"middleware/pkg/pipeline"
 )
 
 func ExtractTLSSNI(payload []byte) (string, error) {
@@ -81,14 +82,23 @@ func ExtractTLSSNI(payload []byte) (string, error) {
 		if extType == 0x0000 {
 			sniData := extBytes[extPos : extPos+extDataLen]
 			if len(sniData) < 5 {
-				return "", errors.New("invalid SNi Extension length")
+				return "", errors.New("invalid SNI extension length")
+			}
+
+			if sniData[2] != 0x00 {
+				return "", errors.New("unsupported SNI name type")
 			}
 
 			nameLen := int(binary.BigEndian.Uint16(sniData[3:5]))
-			if len(sniData) < 5+nameLen {
+			if nameLen <= 0 || len(sniData) < 5+nameLen {
 				return "", errors.New("invalid SNI name length")
 			}
-			return string(sniData[5 : 5+nameLen]), nil
+
+			name := pipeline.SanitizeDomain(string(sniData[5 : 5+nameLen]))
+			if name == "" {
+				return "", errors.New("invalid SNI hostname")
+			}
+			return name, nil
 		}
 
 		extPos += extDataLen
