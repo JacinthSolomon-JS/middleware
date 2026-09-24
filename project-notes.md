@@ -27,9 +27,12 @@ echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
 ---
 ## Notes
 
-1.  **[SOLVED]** Common Errors for initializing IP-Tables ``` [ERROR] IPTables failed: exec: "iptables": executable file not found in $PATH ``` 
-    - Install iptables via system packet manager  
-      ```bash
+####
+
+1. **[SOLVED]** Common Errors for initializing IP-Tables
+`[ERROR] IPTables failed: exec: "iptables": executable file not found in $PATH` 
+- Install iptables via system packet manager  
+  ```bash
       # Debian/Ubuntu/Kali
       sudo apt update && sudo apt install -y iptables
       
@@ -38,17 +41,23 @@ echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
       
       # RHEL/CentOS/Fedora
       sudo dnf install iptables-services iptables
-      ```
-    - Run with Root Privileges 
-      ```bash
-      # Elevated Root Privileges
-      sudo go run . 
-      # or use  compiled binary
-      sudo go build main.go && sudo ./main      
-      ```
+  ```
+- Run with Root Privileges 
+  ```bash
+  # Elevated Root Privileges
+  sudo go run . 
+  # or use  compiled binary
+  sudo go build main.go && sudo ./main      
+  ```
+  
+2. Kernel-Level Packet Filtering with eBPF via XDP for Performance and Security is leveraging eBPF (Extended Berkeley Packet Filter) via XDP (eXpress Data Path) inside the Linux kernel.
+    [Read More..](https://www.cerbos.dev/blog/20-open-source-tools-for-zero-trust-architecture#:~:text=*%20Encrypts%20traffic%20between%20workloads%20to%20protect,behaviour%2C%20assisting%20in%20monitoring%20and%20troubleshooting%20efforts.)
+    
+3. Native System Firewall with `iptables`/`nftables` can build a daemon that runs alongside standard Linux tools, Similar approach to Fail2ban or CrowdSec.
+4. Inline Reverse Proxy/TLS SNI Inspector (OSI Layer 7 Deep Packet Inspectio)
 ---
 
-##### Pre-Configured Blocklists
+#### Pre-Configured Blocklists
 These are sample categorized pre-configured blocklists
 ```markdown
 1. GENERAL ADBLOCKING & PRIVACY (10 Lists)
@@ -200,14 +209,16 @@ These are sample categorized pre-configured blocklists
                                │   └──────────────────────────┘   │
                                └──────────────────────────────────┘
 ```
-### Test Trials
+### Testing
 
-##### Test 1
 ```Bash
 go run cmd/gateway/main.go # Run the middleware with port 1053
+or 
+sudo go run .
+
 dig @127.0.0.1 -p 1053 google.com # Normal Domain resolve to 1.1.1.1 (cloudflare)
 dig @127.0.0.1 -p 1053 malware.com # Static Blocklist Domain (Sink-hole to 0.0.0.0)
 dig @127.0.0.1 -p 1053 x89a1zq98lbz19q7m3.biz # Zero-Day DGA Domain (High Entropy - Should BLOCK) {Didn't work}
-```
 
-Now DGA High-Entropy Domain work.
+dig @127.0.0.1 -p 1053 $(openssl rand -hex 8).com # Generates a random high-entropy 16-character string domain
+```
