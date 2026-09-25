@@ -7,15 +7,27 @@ import (
 	"middleware/pkg/storage"
 	"net"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/miekg/dns"
 )
 
+const upstreamTimeout = 2 * time.Second
+
 type Server struct {
 	engine    *pipeline.Engine
-	dnsServer *dns.Server
-	upstream  string
+	udpServer *dns.Server
+	tcpServer *dns.Server
+	upstream  atomic.Pointer[string]
+	failovers atomic.Pointer[[]string]
+	cache     *dnsCache
 	db        *storage.Database
+	events    storage.EventSink
+	ipMatcher IPChecker
+	matcherMu sync.RWMutex
+	sampler   *storage.Sampler
 }
 
 func NewServer(addr string, upstream string, engine *pipeline.Engine, db *storage.Database) *Server {

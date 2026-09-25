@@ -19,6 +19,16 @@ func NewEngine() *Engine {
 	}
 }
 
+// SetMonitor enables or disables monitor mode
+func (e *Engine) SetMonitor(on bool) {
+	e.monitor.Store(on)
+}
+
+// Monitor reports whether the pipeline is in observeOnly mode
+func (e *Engine) Monitor() bool {
+	return e.monitor.Load()
+}
+
 func (e *Engine) RegisterModule(mod SecurityModule) {
 	e.mu.Lock()
 	defer e.mu.Unlock()

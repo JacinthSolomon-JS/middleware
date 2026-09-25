@@ -5,23 +5,42 @@ import (
 	"fmt"
 	"log"
 	"middleware/pkg/pipeline"
+	"middleware/pkg/storage"
 	"net"
 
-	"github.com/florianl/go-nfqueue"
+	"github.com/florianl/go-nfqueue/v2"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
 
-// NFQueueHandler holds references to our decision engine and inspector
-type NFQueueHandler struct {
-	Inspector *PacketInspector
-	Engine    *pipeline.Engine
+// verdictSetter lets tests substitute a fake for *nfqueue.Nfqueue
+type verdictSetter interface {
+	SetVerdict(id uint32, verdict int) error
 }
 
-func NewNFQueueHandler(engine *pipeline.Engine, inspector *PacketInspector) *NFQueueHandler {
+// IPMatcher reports whether a destination IP is blocked by the runtime IP blocklist
+type IPMatcher interface {
+	ContainsIP(ip net.IP) bool
+}
+
+// NFQueueHandler holds references to our decision engine and inspector
+type NFQueueHandler struct {
+	Engine      *pipeline.Engine
+	Inspector   *PacketInspector
+	db          *storage.Database
+	events      storage.EventSink
+	ipBlocklist IPMatcher
+	sampler     *storage.Sampler
+	dedupe      *blockDedupe
+}
+
+func NewNFQueueHandler(engine *pipeline.Engine, inspector *PacketInspector, db *storage.Database, events storage.EventSink) *NFQueueHandler {
 	return &NFQueueHandler{
 		Engine:    engine,
 		Inspector: inspector,
+		db:        db,
+		events:    events,
+		dedupe:    newBlockDedupe(),
 	}
 }
 

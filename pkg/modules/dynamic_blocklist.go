@@ -2,76 +2,77 @@ package modules
 
 import (
 	"context"
-	"fmt"
 	"middleware/pkg/pipeline"
-	"strings"
-	"sync"
 )
 
 type DynamicBlocklistModule struct {
-	mu      sync.RWMutex
-	blocked map[string]bool
+	radix *RadixTree
+	store PersistentState
 }
 
-func NewDynamicBlocklistModule(initialDomains []string) *DynamicBlocklistModule {
-	m := make(map[string]bool)
-	for _, d := range initialDomains {
-		m[cleanDomain(d)] = true
+// NewDynamicBlocklistModule bilds the runtime blocklistfor any persisted entries
+func NewDynamicBlocklistModule(initialDomains []string, store PersistentState) *DynamicBlocklistModule {
+	m := NewRadixTree()
+	if store != nil {
+		if persisted, err := store.ListDynamicDomains(); err == nil {
+			for _, d := range persisted {
+				if cleaned := cleanDomain(d); cleaned != "" {
+					m.Insert(cleaned, "")
+				}
+			}
+		}
 	}
-	return &DynamicBlocklistModule{blocked: m}
+	for _, d := range initialDomains {
+		m.Insert(d, "")
+	}
+	return &DynamicBlocklistModule{radix: m, store: store}
 }
 
 func (b *DynamicBlocklistModule) Name() string {
 	return "DynamicBlocklist"
 }
 
-func cleanDomain(domain string) string {
-	return strings.ToLower(strings.TrimSpace(strings.TrimSuffix(domain, ".")))
-}
-
 func (b *DynamicBlocklistModule) Inspect(ctx context.Context, tctx *pipeline.TrafficContext) (bool, error) {
-	domain := cleanDomain(tctx.Domain)
-
-	b.mu.RLock()
-	isBlocked := b.blocked[domain]
-	b.mu.RUnlock()
-
-	if isBlocked {
+	// Suffix semantics: block on the query itself or any parent label.
+	if _, ok := b.radix.Match(tctx.Domain); ok {
 		tctx.FinalAction = pipeline.ActionBlock
 		tctx.MatchedBy = b.Name()
-		tctx.BlockReason = fmt.Sprintf("[Blocked] Domain '%s' matched dynamic blocklist rule", domain)
+		tctx.BlockReason = "matched runtime blocklist rule"
 		return true, nil
 	}
 	return false, nil
 }
 
-// To Add Domain to active blocklist in real time
-func (b *DynamicBlocklistModule) AddDomain(domain string) {
+// AddDomain blocks a domain and, under suffix semantics, every subdomain of it.
+func (b *DynamicBlocklistModule) AddDomain(domain string) bool {
 	d := cleanDomain(domain)
 	if d == "" {
-		return
+		return false
 	}
-	b.mu.Lock()
-	b.blocked[d] = true
-	b.mu.Unlock()
+
+	if b.radix.Contains(d) {
+		return false
+	}
+	b.radix.Insert(d, "")
+	if b.store != nil {
+		b.store.AddDynamicDomain(d)
+	}
+	return true
 }
 
-// RemoveDomain to unblock a domain in realtime
-func (b *DynamicBlocklistModule) RemoveDomain(domain string) {
+// RemoveDomain un-blocks a single exact rule under suffix semantics
+func (b *DynamicBlocklistModule) RemoveDomain(domain string) bool {
 	d := cleanDomain(domain)
-	b.mu.Lock()
-	delete(b.blocked, d)
-	b.mu.Unlock()
+	if d == "" || !b.radix.Remove(d) {
+		return false
+	}
+	if b.store != nil {
+		b.store.RemoveDynamicDomain(d)
+	}
+	return true
 }
 
-// ListDomains to list copy of all current rules
+// ListDomains returns a copy of all current rules.
 func (b *DynamicBlocklistModule) ListDomains() []string {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-
-	domains := make([]string, 0, len(b.blocked))
-	for d := range b.blocked {
-		domains = append(domains, d)
-	}
-	return domains
+	return b.radix.Domains()
 }

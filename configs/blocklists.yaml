@@ -1,6 +1,8 @@
 version: "1.0"
 updated_at: "2026-09-19"
-description: "List of 100 Pre-Configured Blocklists categorized by domain types and security policies."
+settings:
+  refresh_interval_hours: 24
+  max_concurrent_downloads: 5
 
 sources:
   # 1. GENERAL ADBLOCKING & PRIVACY (15 Lists)
@@ -9,7 +11,7 @@ sources:
     name: "OISD Small (Basic Adblock)"
     category: "General Adblocking & Privacy"
     url: "https://small.oisd.nl"
-    enabled: true
+    enabled: false
 
   - id: "oisd-big"
     name: "OISD Big (Full Ad & Tracker Guard)"
@@ -21,13 +23,13 @@ sources:
     name: "StevenBlack Unified Hosts"
     category: "General Adblocking & Privacy"
     url: "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
-    enabled: true
+    enabled: false
 
   - id: "adguard-dns-main"
     name: "AdGuard DNS Main Filter"
     category: "General Adblocking & Privacy"
     url: "https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt"
-    enabled: true
+    enabled: false
 
   - id: "adguard-base"
     name: "AdGuard Base Filter"
@@ -39,25 +41,25 @@ sources:
     name: "AdGuard Mobile Ads Filter"
     category: "General Adblocking & Privacy"
     url: "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_11_Mobile/filter.txt"
-    enabled: true
+    enabled: false
 
   - id: "easylist-main"
     name: "EasyList Official"
     category: "General Adblocking & Privacy"
     url: "https://easylist.to/easylist/easylist.txt"
-    enabled: true
+    enabled: false
 
   - id: "easyprivacy"
     name: "EasyPrivacy Tracking Protection"
     category: "General Adblocking & Privacy"
     url: "https://easylist.to/easylist/easyprivacy.txt"
-    enabled: true
+    enabled: false
 
   - id: "peter-lowe-adservers"
     name: "Peter Lowe's Ad & Tracking List"
     category: "General Adblocking & Privacy"
     url: "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"
-    enabled: true
+    enabled: false
 
   - id: "duckduckgo-tracker-radar"
     name: "DuckDuckGo Tracker Radar"
@@ -69,7 +71,7 @@ sources:
     name: "Firebog WaLLy3K Personal List"
     category: "General Adblocking & Privacy"
     url: "https://v.firebog.net/hosts/static/w3kbl.txt"
-    enabled: true
+    enabled: false
 
   - id: "firebog-easylist"
     name: "Firebog EasyList Hosts"
@@ -87,13 +89,13 @@ sources:
     name: "Firebog Admiral Anti-Adblock Domains"
     category: "General Adblocking & Privacy"
     url: "https://v.firebog.net/hosts/Admiral.txt"
-    enabled: true
+    enabled: false
 
   - id: "dan-pollock-hosts"
     name: "Dan Pollock's Hosts File"
     category: "General Adblocking & Privacy"
     url: "https://someonewhocares.org/hosts/zero/hosts"
-    enabled: true
+    enabled: false
 
 
   # 2. SECURITY, MALWARE & PHISHING (20 Lists)
@@ -102,25 +104,25 @@ sources:
     name: "URLHaus Malware Hostfile"
     category: "Security, Malware & Phishing"
     url: "https://urlhaus.abuse.ch/downloads/hostfile/"
-    enabled: true
+    enabled: false
 
-  - id: "phisharmy-extended"
-    name: "PhishArmy Extended Phishing List"
-    category: "Security, Malware & Phishing"
-    url: "https://phish.army/download/phishing_army_blocklist_extended.txt"
-    enabled: true
+#  - id: "phisharmy-extended"
+#    name: "PhishArmy Extended Phishing List"
+#    category: "Security, Malware & Phishing"
+#    url: "https://phish.army/download/phishing_army_blocklist_extended.txt"
+#    enabled: false
 
   - id: "openphish-feed"
     name: "OpenPhish Active Feed"
     category: "Security, Malware & Phishing"
     url: "https://openphish.com/feed.txt"
-    enabled: true
+    enabled: false
 
   - id: "threatfox-hosts"
     name: "ThreatFox IOC Malicious Hostfile"
     category: "Security, Malware & Phishing"
     url: "https://threatfox.abuse.ch/downloads/hostfile/"
-    enabled: true
+    enabled: false
 
   - id: "vxvault-urls"
     name: "VX Vault Malicious URL Feed"
@@ -128,23 +130,23 @@ sources:
     url: "http://vxvault.net/URL_List.php"
     enabled: false
 
-  - id: "malware-domain-list"
-    name: "MalwareDomainList Main"
-    category: "Security, Malware & Phishing"
-    url: "https://www.malwaredomainlist.com/hostslist/hosts.txt"
-    enabled: true
+#  - id: "malware-domain-list"
+#    name: "MalwareDomainList Main"
+#    category: "Security, Malware & Phishing"
+#    url: "https://www.malwaredomainlist.com/hostslist/hosts.txt"
+#    enabled: false
 
   - id: "d3ward-scam-blocklist"
     name: "D3ward Malicious & Scam Domains"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/d3ward/toolz/master/src/d3host.txt"
-    enabled: true
+    enabled: false
 
-  - id: "digitalside-threat-intel"
-    name: "DigitalSide OSINT Threat Intel"
-    category: "Security, Malware & Phishing"
-    url: "https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt"
-    enabled: true
+#  - id: "digitalside-threat-intel"
+#    name: "DigitalSide OSINT Threat Intel"
+#    category: "Security, Malware & Phishing"
+#    url: "https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt"
+#    enabled: false
 
   - id: "cert-poland-warnlist"
     name: "CERT Poland Phishing Warnings"
@@ -156,7 +158,7 @@ sources:
     name: "IPsum Threat Intelligence Level 3+"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt"
-    enabled: true
+    enabled: false
 
   - id: "blocklist-de-all"
     name: "Blocklist.de Fail2Ban Aggregated IPs"
@@ -174,13 +176,13 @@ sources:
     name: "Dandelion Sprout's Anti-Malware"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareAdGuardHome.txt"
-    enabled: true
+    enabled: false
 
   - id: "ublock-badware"
     name: "uBlock Filters - Badware Risks"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/badware.txt"
-    enabled: true
+    enabled: false
 
   - id: "mitchellkrogza-hacked-sites"
     name: "Big List of Hacked Malware Web Sites"
@@ -192,31 +194,31 @@ sources:
     name: "DurableNapkin Scam Blocklist"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/durablenapkin/scamblocklist/master/adguard.txt"
-    enabled: true
+    enabled: false
 
   - id: "firebog-prigent-malware"
     name: "Firebog Prigent Malware List"
     category: "Security, Malware & Phishing"
     url: "https://v.firebog.net/hosts/Prigent-Malware.txt"
-    enabled: true
+    enabled: false
 
   - id: "blocklistproject-phishing"
     name: "BlockList Project Phishing"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/blocklistproject/Lists/master/phishing.txt"
-    enabled: true
+    enabled: false
 
   - id: "blocklistproject-malware"
     name: "BlockList Project Malware"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/blocklistproject/Lists/master/malware.txt"
-    enabled: true
+    enabled: false
 
   - id: "blocklistproject-ransomware"
     name: "BlockList Project Ransomware"
     category: "Security, Malware & Phishing"
     url: "https://raw.githubusercontent.com/blocklistproject/Lists/master/ransomware.txt"
-    enabled: true
+    enabled: false
 
   # 3. PARENTAL CONTROL, ADULT & GAMBLING (15 Lists)
 
@@ -316,19 +318,19 @@ sources:
     name: "CoinBlockerLists Mining Domains"
     category: "Cryptomining & Fraud"
     url: "https://raw.githubusercontent.com/Zerodot0/CoinBlockerLists/master/list.txt"
-    enabled: true
+    enabled: false
 
   - id: "nocoin-adblock"
     name: "NoCoin Cryptomining Filter"
     category: "Cryptomining & Fraud"
     url: "https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt"
-    enabled: true
+    enabled: false
 
   - id: "myetherwallet-crypto-scams"
     name: "Crypto ScamDB Hosts Format"
     category: "Cryptomining & Fraud"
     url: "https://raw.githubusercontent.com/MyEtherWallet/ethereum-lists/master/src/addresses/out/hosts-format.txt"
-    enabled: true
+    enabled: false
 
   - id: "blocklistproject-crypto"
     name: "BlockList Project Crypto Domains"
@@ -340,13 +342,13 @@ sources:
     name: "In-Browser Miner Gateways"
     category: "Cryptomining & Fraud"
     url: "https://raw.githubusercontent.com/Energen/miner-blocklist/master/miners.txt"
-    enabled: true
+    enabled: false
 
   - id: "ublock-resource-abuse"
     name: "uBlock Resource Abuse (Miners)"
     category: "Cryptomining & Fraud"
     url: "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/resource-abuse.txt"
-    enabled: true
+    enabled: false
 
   - id: "firebog-prigent-crypto"
     name: "Firebog Prigent Crypto List"
@@ -440,19 +442,19 @@ sources:
     name: "CrazyMax Windows Telemetry Block"
     category: "Telemetry & Smart Devices"
     url: "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt"
-    enabled: true
+    enabled: false
 
   - id: "perflyst-smarttv"
     name: "Smart TV Telemetry (Samsung/LG/Roku)"
     category: "Telemetry & Smart Devices"
     url: "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt"
-    enabled: true
+    enabled: false
 
   - id: "perflyst-amazon-fire"
     name: "Amazon FireTV Telemetry Filter"
     category: "Telemetry & Smart Devices"
     url: "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/AmazonFireTV.txt"
-    enabled: true
+    enabled: false
 
   - id: "blocklistproject-apple"
     name: "BlockList Project Apple Telemetry"
@@ -464,7 +466,7 @@ sources:
     name: "Android / iOS OEM Telemetry"
     category: "Telemetry & Smart Devices"
     url: "https://raw.githubusercontent.com/blocklistproject/Lists/master/tracking.txt"
-    enabled: true
+    enabled: false
 
   - id: "lightswitch05-amp"
     name: "Lightswitch05 Google AMP Hosts"
@@ -524,7 +526,95 @@ sources:
     name: "uBlock Filters - Privacy Rules"
     category: "Telemetry & Smart Devices"
     url: "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/privacy.txt"
-    enabled: true
+    enabled: false
+
+
+  # 6b. TELEMETRY & TRACKING - PER-VENDOR LISTS (10 Lists; ALL OFF BY DEFAULT)
+  #
+  # Each source is file-type: its HTTPS feed is imported into the local path
+  # on first enable and re-imported every 2 hours while enabled. Bad or empty
+  # downloads never replace a good local file (KI-11). Toggle state persists
+  # across restarts via source_toggles (KI-15).
+
+  - id: "tel-msft"
+    name: "Microsoft Telemetry (Windows/Office)"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.winoffice-onlydomains.txt"
+    path: "config/telemetry/tel-msft.txt"
+    enabled: false
+
+  - id: "tel-apple"
+    name: "Apple Native Telemetry"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.apple-onlydomains.txt"
+    path: "config/telemetry/tel-apple.txt"
+    enabled: false
+
+  - id: "tel-google"
+    name: "Google Telemetry & Ads Endpoints"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/TheBlockList/Blocklist/master/google"
+    path: "config/telemetry/tel-google.txt"
+    enabled: false
+
+  - id: "tel-meta"
+    name: "Meta / Facebook Telemetry (incl. Instagram/WhatsApp domains)"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/jmdugan/blocklists/master/corporations/facebook/all"
+    path: "config/telemetry/tel-meta.txt"
+    enabled: false
+
+  - id: "tel-amazon"
+    name: "Amazon Device Telemetry"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.amazon-onlydomains.txt"
+    path: "config/telemetry/tel-amazon.txt"
+    enabled: false
+
+  - id: "tel-samsung"
+    name: "Samsung Native Telemetry"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.samsung-onlydomains.txt"
+    path: "config/telemetry/tel-samsung.txt"
+    enabled: false
+
+  - id: "tel-xiaomi"
+    name: "Xiaomi / MIUI Native Telemetry"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.xiaomi-onlydomains.txt"
+    path: "config/telemetry/tel-xiaomi.txt"
+    enabled: false
+
+  - id: "tel-oppo"
+    name: "OPPO / Realme Telemetry"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.oppo-realme-onlydomains.txt"
+    path: "config/telemetry/tel-oppo.txt"
+    enabled: false
+
+  - id: "tel-huawei"
+    name: "Huawei Native Telemetry"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/native.huawei-onlydomains.txt"
+    path: "config/telemetry/tel-huawei.txt"
+    enabled: false
+
+  - id: "tel-adobe"
+    name: "Adobe Telemetry Check"
+    category: "Telemetry & Tracking"
+    type: "file"
+    url: "https://raw.githubusercontent.com/ignaciocastro/a-dove-is-dumb/main/pihole.txt"
+    path: "config/telemetry/tel-adobe.txt"
+    enabled: false
 
 
   # 7. REGIONAL & MISCELLANEOUS (15 Lists)
