@@ -22,11 +22,11 @@ const (
 type LogEvent struct {
 	Timestamp   time.Time `json:"Timestamp"`
 	Protocol    string    `json:"Protocol"` // DNS or TLS
-	ClientIP    string    `json: "ClientIP"`
-	Target      string    `json: "Target"` // Domain or SNI
-	Action      string    `json: "Action"` // Allowed or Blocked
-	BlockReason string    `json: "BlockReason"`
-	MatchedBy   string    `json: "MatchedBy"`
+	ClientIP    string    `json:"ClientIP"`
+	Target      string    `json:"Target"` // Domain or SNI
+	Action      string    `json:"Action"` // Allowed or Blocked
+	BlockReason string    `json:"BlockReason"`
+	MatchedBy   string    `json:"MatchedBy"`
 }
 
 // AnalyticsSummary Contains metrics for dashboard display
@@ -38,15 +38,15 @@ type AnalyticsSummary struct {
 
 // CustomSource is a runtime-added blocklist source
 type CustomSource struct {
-	ID        string    `json: "id"`
-	Name      string    `json: "name"`
-	Type      string    `json: "type"`
-	URL       string    `json: "url"`
-	Active    string    `json: "active"`
-	CreatedAt time.Time `json: "created_at"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Type      string    `json:"type"`
+	URL       string    `json:"url"`
+	Active    string    `json:"active"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-// Database Intialization
+// Database Initialization
 type Database struct {
 	db        *sql.DB
 	logChan   chan LogEvent
@@ -59,7 +59,7 @@ type Database struct {
 	retentionMaxAge  time.Duration
 	retentionMaxRows uint64
 
-	// summaryMu seralizes writers of the summary_stats
+	// summaryMu serialize writers of the summary_stats
 	summaryMu sync.Mutex
 
 	// dropped counts events discarded when the log buffer is full
