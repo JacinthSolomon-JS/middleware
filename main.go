@@ -21,7 +21,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/florianl/go-nfqueue"
+	"github.com/florianl/go-nfqueue/v2"
 )
 
 func main() {
