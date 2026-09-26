@@ -3,7 +3,6 @@ module middleware
 go 1.27.1
 
 require (
-	github.com/florianl/go-nfqueue v1.3.2-0.20220924074053-54069006947a
 	github.com/florianl/go-nfqueue/v2 v2.1.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/gopacket v1.1.19
