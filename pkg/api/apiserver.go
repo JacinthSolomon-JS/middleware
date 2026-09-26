@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"middleware/pkg/modules"
 	"middleware/pkg/storage"
-	"middleware/pkg/web"
+	"middleware/web"
 	"net"
 	"net/http"
 	"net/url"
