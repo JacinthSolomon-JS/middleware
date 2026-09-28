@@ -67,17 +67,17 @@ func (t *ipTire) contains(a netip.Addr) bool {
 	a = a.Unmap()
 
 	var root *ipNode
-	max := 128
+	maxs := 128
 	if a.Is4() {
 		root = t.v4
-		max = 32
+		maxs = 32
 	} else {
 		root = t.v6
 	}
 	if root == nil {
 		return false
 	}
-	return trieWalk(root, a, max)
+	return trieWalk(root, a, maxs)
 }
 
 // bitAt extracts the i-th most significant bit of an address
@@ -155,7 +155,7 @@ func (b *IPBlocklistModule) Name() string {
 }
 
 // Inspect blocks the context when its destination IP falls inside blocked
-func (b *IPBlocklistModule) Inspect(ctx context.Context, tctx *pipeline.TrafficContext) (bool, error) {
+func (b *IPBlocklistModule) Inspect(_ context.Context, tctx *pipeline.TrafficContext) (bool, error) {
 	if tctx.DstIP == nil {
 		return false, nil
 	}

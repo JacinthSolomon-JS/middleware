@@ -56,7 +56,7 @@ func (h *NFQueueHandler) SetIPBlocklist(m IPMatcher) {
 }
 
 // HandlePacket processes incoming NFQUEUE attributes and issues verdicts
-func (h *NFQueueHandler) HandlePacket(nf *nfqueue.Nfqueue, a nfqueue.Attribute) int {
+func (h *NFQueueHandler) HandlePacket(nf verdictSetter, a nfqueue.Attribute) int {
 	if a.PacketID == nil {
 		return 0
 	}
