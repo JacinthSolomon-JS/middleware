@@ -43,7 +43,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("\n[ERROR] - Database: Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func(db *storage.Database) {
+		err := db.Close()
+		if err != nil {
+
+		}
+	}(db)
 
 	// Retention for traffic log
 	retention := 0 * time.Second
@@ -69,7 +74,7 @@ func main() {
 	db.Start(ctx)
 
 	// Initialize Blocklist Manager
-	blocklistMgr, err := modules.NewBlocklistManagerModuleWithStore("config/blocklists.yaml", db)
+	blocklistMgr, err := modules.NewBlocklistManagerModuleWithStore("configs/blocklists.yaml", db)
 	if err != nil {
 		log.Fatalf("[ERROR] - BlocklistManager: Failed to initialize blocklist manager: %v", err)
 	}
@@ -203,7 +208,12 @@ func main() {
 		cleanupIptablesOnce()
 		log.Fatalf("Could not open NFQUEUE: %v", err)
 	}
-	defer nf.Close()
+	defer func(nf *nfqueue.Nfqueue) {
+		err := nf.Close()
+		if err != nil {
+
+		}
+	}(nf)
 
 	nfHook := func(a nfqueue.Attribute) int {
 		return handler.HandlePacket(nf, a)
