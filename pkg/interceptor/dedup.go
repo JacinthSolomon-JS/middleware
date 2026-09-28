@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const Ki08DedupeWindow = 30 * time.Second
+const DedupeWindow = 30 * time.Second
 
 // MaxDedupeEntries bounds the block-dedupe map (invariant 4)
 const MaxDedupeEntries = 4096

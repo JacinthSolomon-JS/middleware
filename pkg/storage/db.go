@@ -42,7 +42,7 @@ type CustomSource struct {
 	Name      string    `json:"name"`
 	Type      string    `json:"type"`
 	URL       string    `json:"url"`
-	Active    string    `json:"active"`
+	Active    bool      `json:"active"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -457,7 +457,7 @@ func (s *Database) EraseLogs() (int64, error) {
 	}
 	deleted, _ := res.RowsAffected()
 
-	if _, err := tx.Exec(`DELETE FROM sqlite_sqeuence WHERE name = 'traffic_logs'`); err != nil {
+	if _, err := tx.Exec(`DELETE FROM sqlite_sequence WHERE name = 'traffic_logs'`); err != nil {
 		tx.Rollback()
 		return 0, fmt.Errorf("EraseLogs: Reset Sequence: %w", err)
 	}
@@ -671,7 +671,7 @@ func (s *Database) AddDynamicIP(address string) error {
 	return nil
 }
 
-// RemoveDynamicIp removes a persisted runtime IP/CIDR blocklist entry
+// RemoveDynamicIP removes a persisted runtime IP/CIDR blocklist entry
 func (s *Database) RemoveDynamicIP(address string) error {
 	_, err := s.db.Exec(`DELETE FROM dynamic_ips WHERE address = ?`, address)
 	if err != nil {

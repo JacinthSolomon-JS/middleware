@@ -132,7 +132,7 @@ type IPBlocklistModule struct {
 // IPBlocklistModule loads any persisted entries form the store
 func NewIPBlocklistModule(store PersistentState) *IPBlocklistModule {
 	b := &IPBlocklistModule{store: store}
-	b.trie.Store(&ipTrie{})
+	b.trie.Store(&ipTire{})
 	if store != nil {
 		if persisted, err := store.ListDynamicIPs(); err == nil {
 			for _, s := range persisted {
@@ -298,7 +298,7 @@ func (b *IPBlocklistModule) Overflow() uint64 {
 }
 
 func (b *IPBlocklistModule) rebuildLocked() {
-	t := &ipTrie{}
+	t := &ipTire{}
 	for _, p := range b.entries {
 		t.insert(p)
 	}

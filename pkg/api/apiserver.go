@@ -43,11 +43,11 @@ type ResolverRequest struct {
 
 // ReolverPreset is a selectable secure forward DNS resolver
 type ResolverPreset struct {
-	ID      string `json: "id"`
-	Name    string `json: "name"`
-	Address string `json: "address"`
-	URL     string `json: "url"`
-	Note    string `json: "note"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	URL     string `json:"url"`
+	Note    string `json:"note"`
 }
 
 // ReolverPreset is the picker list for the dashboard
@@ -63,13 +63,13 @@ var ResolverPresets = []ResolverPreset{
 }
 
 // resolverPreset returns the preset with the given ID
-func resolverPreset(id string) (*ResolverPreset, bool) {
+func resolverPreset(id string) (ResolverPreset, bool) {
 	for _, p := range ResolverPresets {
 		if p.ID == id {
 			return p, true
 		}
 	}
-	return &ResolverPreset{}, false
+	return ResolverPreset{}, false
 }
 
 // UpstreamSwitcher changes the DNS Server's forward resolver at runtime
@@ -114,7 +114,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpSrv.Shutdown(ctx)
 }
 
-func NewServer(addr string, db *storage.Database, hub *WSHub) *Server {
+func NewServer(addr, authToken string, db *storage.Database, hub *WSHub, blocklist *modules.DynamicBlocklistModule, manager *modules.BlocklistManagerModule) *Server {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())

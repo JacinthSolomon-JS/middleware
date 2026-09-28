@@ -7,6 +7,7 @@ import (
 	"middleware/pkg/pipeline"
 	"middleware/pkg/storage"
 	"net"
+	"time"
 
 	"github.com/florianl/go-nfqueue/v2"
 	"github.com/google/gopacket"
@@ -40,73 +41,174 @@ func NewNFQueueHandler(engine *pipeline.Engine, inspector *PacketInspector, db *
 		Inspector: inspector,
 		db:        db,
 		events:    events,
-		dedupe:    newBlockDedupe(),
+		dedupe:    newBlockDedupe(DedupeWindow),
 	}
+}
+
+// SetSampler installs the allowed-traffic sampler
+func (h *NFQueueHandler) SetSampler(s *storage.Sampler) {
+	h.sampler = s
+}
+
+// SetIPBlocklist installs the runtime malicious IP matcher
+func (h *NFQueueHandler) SetIPBlocklist(m IPMatcher) {
+	h.ipBlocklist = m
 }
 
 // HandlePacket processes incoming NFQUEUE attributes and issues verdicts
 func (h *NFQueueHandler) HandlePacket(nf *nfqueue.Nfqueue, a nfqueue.Attribute) int {
-	if a.PacketID == nil || a.Payload == nil {
+	if a.PacketID == nil {
 		return 0
 	}
 
 	id := *a.PacketID
-	payload := *a.Payload
-
-	// 1. Parse raw network layers
-	packet := gopacket.NewPacket(payload, layers.LayerTypeIPv4, gopacket.Default)
-
-	var srcIP net.IP
-	if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
-		if ip, ok := ipLayer.(*layers.IPv4); ok {
-			srcIP = ip.SrcIP
+	settled := false
+	settle := func(v int) {
+		if settled {
+			return
 		}
+		settled = true
+		_ = nf.SetVerdict(id, v)
 	}
 
-	// 2. Extract domain (SNI from TLS Client Hello or DNS Request Payload)
-	extractedDomain := h.extractDomainFromPayload(packet)
+	// A panic must never leave the packet unresolved
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[NFQUEUE] panic in handler for packet %d; accepting: %v", id, r)
+			settle(nfqueue.NfAccept)
+		}
+	}()
 
-	// 3. Build Traffic Context for the Pipeline
+	if a.Payload == nil {
+		settle(nfqueue.NfAccept)
+		return 0
+	}
+	payload := *a.Payload
+	if len(payload) == 0 {
+		settle(nfqueue.NfAccept)
+		return 0
+	}
+
+	// Parse the raw IP packet to extract srcIP, dstIP and the TLS/SNI domain.
+	var ipLayerType gopacket.LayerType
+	if len(payload) > 0 && payload[0]>>4 == 6 {
+		ipLayerType = layers.LayerTypeIPv6
+	} else {
+		ipLayerType = layers.LayerTypeIPv4
+	}
+	packet := gopacket.NewPacket(payload, ipLayerType, gopacket.Default)
+
+	var srcIP, dstIP net.IP
+	if ip4 := packet.Layer(layers.LayerTypeIPv4); ip4 != nil {
+		if ipv4, ok := ip4.(*layers.IPv4); ok {
+			srcIP = ipv4.SrcIP
+			dstIP = ipv4.DstIP
+		}
+	} else if ip6 := packet.Layer(layers.LayerTypeIPv6); ip6 != nil {
+		if ipv6, ok := ip6.(*layers.IPv6); ok {
+			srcIP = ipv6.SrcIP
+			dstIP = ipv6.DstIP
+		}
+	}
+	if srcIP == nil {
+		srcIP = net.ParseIP("0.0.0.0")
+	}
+
+	// Direct-IP block: drop every packet to a blocked destination
+	if h.ipBlocklist != nil && dstIP != nil && h.ipBlocklist.ContainsIP(dstIP) {
+		verdict := nfqueue.NfDrop
+		if h.Engine != nil && h.Engine.Monitor() {
+			verdict = nfqueue.NfAccept
+		}
+		settle(verdict)
+		if h.dedupe == nil || h.dedupe.emittable("", "ip:"+dstIP.String()) {
+			h.record(storage.LogEvent{
+				Timestamp:   time.Now(),
+				Protocol:    "IP",
+				ClientIP:    srcIP.String(),
+				Target:      dstIP.String(),
+				Action:      pipeline.ActionBlock.String(),
+				BlockReason: "destination IP " + dstIP.String() + " matched IP blocklist",
+				MatchedBy:   "IPBlocklist",
+			})
+		}
+		return 0
+	}
+
 	tctx := pipeline.NewTrafficContext(
 		fmt.Sprintf("pkt-%d", id),
 		srcIP,
-		extractedDomain,
+		"",
 		0,
 	)
+	tctx.DstIP = dstIP
 
-	// 4. Run packet context through the Pipeline Engine
-	h.Engine.Process(context.Background(), tctx)
+	domain, err := h.extractDomainFromPayload(packet)
+	if err == nil && domain != "" {
+		tctx.Domain = domain
+		h.Engine.Process(context.Background(), tctx)
 
-	// 5. Enforce verdict based on Pipeline Action
-	verdict := nfqueue.NfAccept
-	if tctx.FinalAction == pipeline.ActionBlock {
-		verdict = nfqueue.NfDrop
-		fmt.Printf("[BLOCKED] Packet ID: %d | Domain: %s | Reason: %s\n", id, tctx.Domain, tctx.BlockReason)
-	} else {
-		fmt.Printf("[ALLOWED] Packet ID: %d | Domain: %s\n", id, tctx.Domain)
+		if tctx.EnforcedAction() == pipeline.ActionBlock {
+			if h.dedupe == nil || h.dedupe.emittable(dstIP.String(), domain) {
+				h.record(storage.LogEvent{
+					Timestamp:   time.Now(),
+					Protocol:    "TLS",
+					ClientIP:    tctx.SrcIP.String(),
+					Target:      tctx.Domain,
+					Action:      tctx.FinalAction.String(),
+					BlockReason: tctx.BlockReason,
+					MatchedBy:   tctx.MatchedBy,
+				})
+			}
+			log.Printf("[BLOCK TLS] Drop stream for SNI domain: %s (%s)", domain, tctx.BlockReason)
+			settle(nfqueue.NfDrop)
+			return 0
+		}
+
+		// Allowed (or observed in monitor mode): record every occurrence.
+		h.record(storage.LogEvent{
+			Timestamp:   time.Now(),
+			Protocol:    "TLS",
+			ClientIP:    tctx.SrcIP.String(),
+			Target:      tctx.Domain,
+			Action:      tctx.FinalAction.String(),
+			BlockReason: tctx.BlockReason,
+			MatchedBy:   tctx.MatchedBy,
+		})
 	}
 
-	// 6. Return Verdict to Kernel via NFQUEUE
-	if err := nf.SetVerdict(id, verdict); err != nil {
-		log.Printf("Error setting verdict for packet ID %d: %v\n", id, err)
-	}
-
+	settle(nfqueue.NfAccept)
 	return 0
 }
 
-// Helper method to pull SNI or Host header out of the packet
-func (h *NFQueueHandler) extractDomainFromPayload(packet gopacket.Packet) string {
-	if h.Inspector != nil {
-		tcpLayer := packet.Layer(layers.LayerTypeTCP)
-		if tcpLayer == nil {
-			tcp, _ := tcpLayer.(*layers.TCP)
-			if IsTLSClientHello(tcp.Payload) {
-				sni, err := ExtractTLSSNI(tcp.Payload)
-				if err == nil {
-					return sni
-				}
-			}
-		}
+// record feeds an event to persistent log
+func (h *NFQueueHandler) record(e storage.LogEvent) {
+	if h.sampler != nil && !h.sampler.ShouldRecord(e.Action) {
+		return
 	}
-	return ""
+	if h.db != nil {
+		h.db.Log(e)
+	}
+	if h.events != nil {
+		h.events.Broadcast(e)
+	}
+}
+
+// Helper method to pull SNI or Host header out of the packet
+func (h *NFQueueHandler) extractDomainFromPayload(packet gopacket.Packet) (string, error) {
+	if h.Inspector == nil {
+		return "", fmt.Errorf("inspector not initialised")
+	}
+	tcpLayer := packet.Layer(layers.LayerTypeTCP)
+	if tcpLayer == nil {
+		return "", fmt.Errorf("no TCP layer")
+	}
+	tcp, ok := tcpLayer.(*layers.TCP)
+	if !ok || tcp == nil {
+		return "", fmt.Errorf("invalid TCP layer")
+	}
+	if !IsTLSClientHello(tcp.Payload) {
+		return "", fmt.Errorf("not a TLS Client Hello")
+	}
+	return ExtractTLSSNI(tcp.Payload)
 }

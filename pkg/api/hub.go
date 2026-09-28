@@ -59,7 +59,7 @@ type WSHub struct {
 	broadcast  chan storage.LogEvent
 	register   chan *wsClient
 	closed     chan struct{}
-	closedOnce sync.Once
+	closeOnce  sync.Once
 	mu         sync.Mutex
 
 	// Keep alive

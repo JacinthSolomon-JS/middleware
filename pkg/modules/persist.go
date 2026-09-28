@@ -10,9 +10,9 @@ type PersistentState interface {
 	RemoveDynamicDomain(domain string) error
 
 	// Dynamic Ip blocklist (CIDR entries)
-	ListDynamicIps() ([]string, error)
-	AddDynamicIp(address string) error
-	RemoveDynamicIp(address string) error
+	ListDynamicIPs() ([]string, error)
+	AddDynamicIP(address string) error
+	RemoveDynamicIP(address string) error
 
 	// Allowlist
 	ListAllowlistDomains() ([]string, error)
@@ -26,7 +26,6 @@ type PersistentState interface {
 	// Custom sources
 	ListCustomSources() ([]storage.CustomSource, error)
 	SaveCustomSource(c storage.CustomSource) error
-	DeleteCustomSource(id string) error
 
 	// Generic settings
 	GetSetting(key string) (string, bool, error)
