@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Corrected formatted logging calls identified by static analysis.
 - Removed the management bearer token from generated dashboard HTML; the operator now supplies it at runtime and it is retained only for the current browser-tab session.
+- Routed unexpected API and DNS background-server failures through the main shutdown path so deferred resource and firewall cleanup always executes.
 
 ### Security
 

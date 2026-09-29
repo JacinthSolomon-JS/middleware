@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"middleware/pkg/api"
@@ -13,6 +14,7 @@ import (
 	"middleware/pkg/pipeline"
 	"middleware/pkg/storage"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -25,10 +27,18 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Printf("[ERROR] Gateway stopped: %v", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	// For Clean start up running a standalone subcommand to remove every tagged IPTable rules
 	if len(os.Args) > 1 && os.Args[1] == "--cleanup" {
 		cleanupIptables()
 		fmt.Println("[CLEANUP] Removed all tagged rules. Internet and DNS restored")
+		return nil
 	}
 
 	fmt.Println("Starting Gateway Resolver...")
@@ -41,7 +51,7 @@ func main() {
 	fmt.Println("\n[STARTED] - DB: Initialized Database")
 	db, err := storage.NewDatabase(dbPath(), 10000, 50, 1*time.Second)
 	if err != nil {
-		log.Fatalf("\n[ERROR] - Database: Failed to connect to database: %v", err)
+		return fmt.Errorf("database initialization: %w", err)
 	}
 	defer func(db *storage.Database) {
 		err := db.Close()
@@ -54,7 +64,7 @@ func main() {
 	retention := 0 * time.Second
 	if v := os.Getenv("LOG_RETENTION"); v != "" {
 		if d, err := time.ParseDuration(v); err != nil || d <= 0 {
-			log.Fatalf("[ERROR] - LOG_RETENTION: Invalid positive duration %q", v)
+			return fmt.Errorf("LOG_RETENTION must be a positive duration: %q", v)
 		} else {
 			retention = d
 		}
@@ -64,7 +74,7 @@ func main() {
 	if v := os.Getenv("GATEWAY_LOG_MAX_ROWS"); v != "" {
 		n, err := strconv.ParseUint(v, 10, 64)
 		if err != nil || n == 0 {
-			log.Fatalf("[ERROR] - GATEWAY_LOG_MAX_ROWS is not a valid positive integer: %q", v)
+			return fmt.Errorf("GATEWAY_LOG_MAX_ROWS must be a positive integer: %q", v)
 		}
 		maxRows = n
 	}
@@ -76,7 +86,7 @@ func main() {
 	// Initialize Blocklist Manager
 	blocklistMgr, err := modules.NewBlocklistManagerModuleWithStore("configs/blocklists.yaml", db)
 	if err != nil {
-		log.Fatalf("[ERROR] - BlocklistManager: Failed to initialize blocklist manager: %v", err)
+		return fmt.Errorf("blocklist manager initialization: %w", err)
 	}
 
 	// Runtime added domains
@@ -124,7 +134,7 @@ func main() {
 	// API bearer token
 	apiToken, err := loadAPIToken()
 	if err != nil {
-		log.Fatalf("[ERROR] - API: failed to load token: %v", err)
+		return fmt.Errorf("load API token: %w", err)
 	}
 
 	// WebSocket Hub & API Server
@@ -154,10 +164,10 @@ func main() {
 		cleanupIptables()
 	}
 	defer cleanupIptablesOnce()
+	runtimeErrors := make(chan error, 2)
 	go func() {
-		if err := apiServer.Start(); err != nil {
-			cleanupIptablesOnce()
-			log.Fatalf("[ERROR] - API: Server failed error: %v", err)
+		if err := apiServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			runtimeErrors <- fmt.Errorf("API server: %w", err)
 		}
 	}()
 
@@ -179,8 +189,7 @@ func main() {
 	dnsServer.SetSampler(eventSampler)
 	go func() {
 		if err := dnsServer.Start(); err != nil {
-
-			log.Printf("\n[ERROR] - DNS: Server failed to start: %v", err)
+			runtimeErrors <- fmt.Errorf("DNS server: %w", err)
 		}
 	}()
 	apiServer.SetUpstreamSwitcher(dnsServer)
@@ -189,6 +198,7 @@ func main() {
 	// Initialize Shutdown Signal
 	sigChain := make(chan os.Signal, 1)
 	signal.Notify(sigChain, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigChain)
 
 	// Configure IPTables Rules
 	setupIptables()
@@ -205,8 +215,7 @@ func main() {
 
 	nf, err := nfqueue.Open(&config)
 	if err != nil {
-		cleanupIptablesOnce()
-		log.Fatalf("Could not open NFQUEUE: %v", err)
+		return fmt.Errorf("open NFQUEUE: %w", err)
 	}
 	defer func(nf *nfqueue.Nfqueue) {
 		err := nf.Close()
@@ -225,8 +234,7 @@ func main() {
 	}
 
 	if err := nf.RegisterWithErrorFunc(ctx, nfHook, errHook); err != nil {
-		cleanupIptablesOnce()
-		log.Fatalf("Failed to register nfqueue: %v", err)
+		return fmt.Errorf("register NFQUEUE: %w", err)
 	}
 
 	fmt.Println("Successfully connected to NFQUEUE!")
@@ -239,12 +247,14 @@ func main() {
 
 	fmt.Println("\n[ACTIVE] - Process: waiting for packets... (Press Ctrl+C to stop)")
 
-	// Wait for Shutdown Signal
-	<-sigChain
+	// A signal and an unexpected background-server failure follow the same
+	// orderly shutdown path, ensuring every registered cleanup still runs.
+	runtimeErr := waitForShutdown(sigChain, runtimeErrors)
 	fmt.Println("\nShutting down Gateway...")
+	cancel()
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
 	wsHub.Stop()
 	if eventSampler.Nth() > 1 && eventSampler.Skipped() > 0 {
 		log.Printf("[STATS] ALLOW events sampled out during this run: %d (interval %d)",
@@ -255,6 +265,17 @@ func main() {
 	}
 	if err := apiServer.Shutdown(shutdownCtx); err != nil {
 		log.Printf("[WARNING] API server shutdown: %v", err)
+	}
+	return runtimeErr
+}
+
+func waitForShutdown(sigChain <-chan os.Signal, runtimeErrors <-chan error) error {
+	select {
+	case sig := <-sigChain:
+		log.Printf("[SHUTDOWN] Received signal %s", sig)
+		return nil
+	case err := <-runtimeErrors:
+		return err
 	}
 }
 
