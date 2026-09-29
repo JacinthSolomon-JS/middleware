@@ -204,7 +204,7 @@ func run() error {
 	iptablesUp = true
 
 	// NFQUEUE Initialization
-	fmt.Println("\nAttempting to connect to NFQUEUE Number 0...")
+	fmt.Printf("\nAttempting to connect to NFQUEUE Number %d...\n", nfqueueNum())
 	config := nfqueue.Config{
 		NfQueue:      uint16(nfqueueNum()),
 		MaxPacketLen: 0xFFFF,
@@ -340,10 +340,13 @@ func dbPath() string {
 	return "gateway.db"
 }
 
+// maxNFQueueNum is the highest NFQUEUE number the kernel accepts
+const maxNFQueueNum = 1<<16 - 1
+
 // nfqueueNum returns the NFQUEUE number for the outbound inspector.
 func nfqueueNum() int {
 	if v := strings.TrimSpace(os.Getenv("GATEWAY_NFQUEUE_NUM")); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 && n <= maxNFQueueNum {
 			return n
 		}
 		log.Printf("[WARNING] Ignoring invalid GATEWAY_NFQUEUE_NUM %q; using default", v)
@@ -375,11 +378,12 @@ func flowStartMatches(maxPackets string) []string {
 func getIptablesRules(action string) [][]string {
 	proto := interceptProtocol()
 	maxPackets := interceptMaxPackets()
+	qnum := strconv.Itoa(nfqueueNum())
 
 	tagged := func(extra ...string) []string {
 		base := []string{action, "OUTPUT", "-m", "owner", "!", "--uid-owner", iptablesOwnerUID()}
 		base = append(base, extra...)
-		base = append(base, "-m", "comment", "--comment", "gateway", "-j", "NFQUEUE", "--queue-num", "0", "--queue-bypass")
+		base = append(base, "-m", "comment", "--comment", "gateway", "-j", "NFQUEUE", "--queue-num", qnum, "--queue-bypass")
 		return base
 	}
 
@@ -407,11 +411,12 @@ func getIptables6Rules(action string) [][]string {
 	}
 	proto := interceptProtocol()
 	maxPackets := interceptMaxPackets()
+	qnum := strconv.Itoa(nfqueueNum())
 
 	tagged := func(extra ...string) []string {
 		base := []string{action, "OUTPUT", "-m", "owner", "!", "--uid-owner", iptablesOwnerUID()}
 		base = append(base, extra...)
-		base = append(base, "-m", "comment", "--comment", "gateway", "-j", "NFQUEUE", "--queue-num", "0", "--queue-bypass")
+		base = append(base, "-m", "comment", "--comment", "gateway", "-j", "NFQUEUE", "--queue-num", qnum, "--queue-bypass")
 		return base
 	}
 
