@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the management bearer token from generated dashboard HTML; the operator now supplies it at runtime and it is retained only for the current browser-tab session.
 - Routed unexpected API and DNS background-server failures through the main shutdown path so deferred resource and firewall cleanup always executes.
 - Added explicit logging or error propagation for database transactions and closes, NFQUEUE verdicts and shutdown, DNS listener shutdown, WebSocket I/O, and blocklist file/response cleanup.
+- Replaced outdated development notes with current architecture, dependencies, runtime behavior, verification guidance, and Linux requirements.
 
 ### Security
 
