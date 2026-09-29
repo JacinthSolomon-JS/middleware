@@ -26,7 +26,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const maxFeedBodyBytes = 32 << 20 // 32 MiB cap on feed downloads
+const MaxBlocklistFileBytes = 32 << 20 // 32 MiB Max Limit
 
 var sourceIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,63}$`)
 
@@ -159,7 +159,7 @@ func isPublicIP(ip net.IP) bool {
 		ip.IsLinkLocalMulticast() || ip.IsMulticast() || ip.IsUnspecified() || ip.IsInterfaceLocalMulticast())
 }
 
-func validSourceID(id string) bool {
+func ValidSourceID(id string) bool {
 	return sourceIDPattern.MatchString(id)
 }
 
@@ -201,7 +201,7 @@ func (b *BlocklistManagerModule) LoadConfigFromFile(filePath string) error {
 		if s.Type == "" {
 			s.Type = "preset"
 		}
-		if !validSourceID(s.ID) {
+		if !ValidSourceID(s.ID) {
 			return fmt.Errorf("[ERROR]: invalid source id %q", s.ID)
 		}
 
@@ -401,7 +401,7 @@ func (b *BlocklistManagerModule) RefreshTelemetry() {
 
 // AddCustomURL adds a custom remote blocklist URL
 func (b *BlocklistManagerModule) AddCustomURL(id string, name string, rawURL string) error {
-	if !validSourceID(id) {
+	if !ValidSourceID(id) {
 		return fmt.Errorf("invalid source id %q", id)
 	}
 	u, err := url.Parse(rawURL)
@@ -432,7 +432,7 @@ func (b *BlocklistManagerModule) AddCustomURL(id string, name string, rawURL str
 
 // ImportFile reads domains from a local hostfile/text file
 func (b *BlocklistManagerModule) ImportFile(id string, name string, filePath string) error {
-	if !validSourceID(id) {
+	if !ValidSourceID(id) {
 		return fmt.Errorf("invalid source id %q", id)
 	}
 
@@ -510,7 +510,7 @@ func (b *BlocklistManagerModule) RefreshSource(id string) error {
 
 // fetchSource downloads, parses, and validates one source's feed without touching the trie or the sources map.
 func (b *BlocklistManagerModule) fetchSource(id string) ([]string, error) {
-	if !validSourceID(id) {
+	if !ValidSourceID(id) {
 		return nil, fmt.Errorf("invalid source id %q", id)
 	}
 	b.mu.RLock()
@@ -591,12 +591,12 @@ func (b *BlocklistManagerModule) downloadFeed(id, srcURL string) ([]string, erro
 		return nil, fmt.Errorf("[ERROR]: HTTP error %d fetching %s", resp.StatusCode, srcURL)
 	}
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFeedBodyBytes+1))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, MaxBlocklistFileBytes+1))
 	if err != nil {
 		return nil, err
 	}
-	if len(body) > maxFeedBodyBytes {
-		return nil, fmt.Errorf("[ERROR]: feed %s exceeds %d byte limit", id, maxFeedBodyBytes)
+	if len(body) > MaxBlocklistFileBytes {
+		return nil, fmt.Errorf("[ERROR]: feed %s exceeds %d byte limit", id, MaxBlocklistFileBytes)
 	}
 
 	domains, skipped := parseHostFormatStats(bytes.NewReader(body))

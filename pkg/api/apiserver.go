@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"crypto/subtle"
+	"errors"
 	"fmt"
 	"middleware/pkg/modules"
 	"middleware/pkg/storage"
@@ -25,6 +26,8 @@ const (
 	apiWriteTimeout      = 30 * time.Second
 	apiIdleTimeout       = 60 * time.Second
 )
+
+const maxUploadBodyBytes = modules.MaxBlocklistFileBytes + (1 << 20)
 
 type DomainRequest struct {
 	Domain string `json:"domain" binding:"required"`
@@ -567,32 +570,45 @@ func (s *Server) setupRoutes() {
 			})
 
 			authed.POST("/sources/upload", func(c *gin.Context) {
+				c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxUploadBodyBytes)
 				file, err := c.FormFile("file")
 				if err != nil {
+					var tooLarge *http.MaxBytesError
+					if errors.As(err, &tooLarge) {
+						c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "blocklist file exceeds size limit"})
+						return
+					}
 					c.JSON(http.StatusBadRequest, gin.H{"error": "file upload required"})
 					return
 				}
 				listID := c.PostForm("id")
 				listName := c.PostForm("name")
 
+				// Validate before touching the filesystem
+				if !modules.ValidSourceID(listID) {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "invalid source ID"})
+					return
+				}
 				if err := os.MkdirAll("./uploads", 0755); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create upload directory"})
 					return
 				}
 
-				safeFilename := filepath.Base(filepath.Clean(file.Filename))
-				if safeFilename == "." || safeFilename == "/" || safeFilename == "" {
-					c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file name"})
-					return
-				}
-
-				filePath := filepath.Join("./uploads", safeFilename)
+				filePath := filepath.Join("./uploads", listID+".txt")
+				_, statErr := os.Stat(filePath)
+				replacing := statErr == nil
 				if err := c.SaveUploadedFile(file, filePath); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save blocklist file"})
 					return
 				}
 
 				if err := s.blocklistManager.ImportFile(listID, listName, filePath); err != nil {
+					if !replacing {
+						err := os.Remove(filePath)
+						if err != nil {
+							return
+						}
+					}
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to import blocklist file"})
 					return
 				}
