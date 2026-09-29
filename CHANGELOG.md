@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Added bearer-token authentication, loopback Host validation, constant-time token comparison, and WebSocket origin/subprotocol checks.
+- Added management HTTP read-header, read, write, and idle timeouts to limit slow-client resource consumption.
 
 ## Template
 

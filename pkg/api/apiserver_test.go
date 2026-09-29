@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,31 @@ func TestDashboardResponseDoesNotExposeAPIToken(t *testing.T) {
 	}
 	if bytes.Contains(res.Body.Bytes(), []byte("server-secret-token")) {
 		t.Fatal("dashboard response exposes the API token")
+	}
+}
+
+func TestManagementHTTPServerTimeouts(t *testing.T) {
+	server := NewServer("127.0.0.1:0", "token", nil, NewWSHub("token"), nil, nil)
+	if server.httpSrv == nil {
+		t.Fatal("management HTTP server was not initialized")
+	}
+
+	cases := []struct {
+		name string
+		got  time.Duration
+		want time.Duration
+	}{
+		{name: "read header", got: server.httpSrv.ReadHeaderTimeout, want: apiReadHeaderTimeout},
+		{name: "read", got: server.httpSrv.ReadTimeout, want: apiReadTimeout},
+		{name: "write", got: server.httpSrv.WriteTimeout, want: apiWriteTimeout},
+		{name: "idle", got: server.httpSrv.IdleTimeout, want: apiIdleTimeout},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.got != tc.want || tc.got <= 0 {
+				t.Fatalf("timeout = %s, want positive %s", tc.got, tc.want)
+			}
+		})
 	}
 }
 

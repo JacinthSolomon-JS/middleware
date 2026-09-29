@@ -14,8 +14,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	apiReadHeaderTimeout = 5 * time.Second
+	apiReadTimeout       = 15 * time.Second
+	apiWriteTimeout      = 30 * time.Second
+	apiIdleTimeout       = 60 * time.Second
 )
 
 type DomainRequest struct {
@@ -102,7 +110,6 @@ type Server struct {
 
 func (s *Server) Start() error {
 	fmt.Printf("[API] Dashboard Server listening on http://%s\n", s.addr)
-	s.httpSrv = &http.Server{Addr: s.addr, Handler: s.router}
 	return s.httpSrv.ListenAndServe()
 }
 
@@ -128,6 +135,14 @@ func NewServer(addr, authToken string, db *storage.Database, hub *WSHub, blockli
 		addr:             addr,
 		authToken:        authToken,
 		dashboard:        web.DashboardHTML(),
+	}
+	s.httpSrv = &http.Server{
+		Addr:              addr,
+		Handler:           router,
+		ReadHeaderTimeout: apiReadHeaderTimeout,
+		ReadTimeout:       apiReadTimeout,
+		WriteTimeout:      apiWriteTimeout,
+		IdleTimeout:       apiIdleTimeout,
 	}
 
 	s.setupRoutes()
