@@ -196,7 +196,7 @@ func trieWalk(root *ipNode, a netip.Addr, max int) bool {
 	if n.end {
 		return true
 	}
-	for i := 0; i < max; i++ {
+	for i := range max {
 		if n.next[bitAt(a, i)] == nil {
 			return false
 		}
