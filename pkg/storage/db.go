@@ -201,7 +201,7 @@ func (s *Database) Log(event LogEvent) {
 		now := time.Now().UnixNano()
 		last := s.lastDropLog.Load()
 		if now-last >= int64(maxDropLogInterval) && s.lastDropLog.CompareAndSwap(last, now) {
-			log.Println("[WARNING] Log buffer is full: %d events dropped so far (preserved)", n)
+			log.Printf("[WARNING] Log buffer is full: %d events dropped so far (preserved)", n)
 		}
 	}
 }
