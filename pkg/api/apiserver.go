@@ -127,7 +127,7 @@ func NewServer(addr, authToken string, db *storage.Database, hub *WSHub, blockli
 		router:           router,
 		addr:             addr,
 		authToken:        authToken,
-		dashboard:        web.DashboardHTML(authToken),
+		dashboard:        web.DashboardHTML(),
 	}
 
 	s.setupRoutes()

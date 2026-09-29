@@ -1,12 +1,27 @@
 package api
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 )
+
+func TestDashboardResponseDoesNotExposeAPIToken(t *testing.T) {
+	server := NewServer("127.0.0.1:0", "server-secret-token", nil, NewWSHub("server-secret-token"), nil, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://localhost/", nil)
+	res := httptest.NewRecorder()
+	server.router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusOK)
+	}
+	if bytes.Contains(res.Body.Bytes(), []byte("server-secret-token")) {
+		t.Fatal("dashboard response exposes the API token")
+	}
+}
 
 func TestResolverPreset(t *testing.T) {
 	preset, ok := resolverPreset("cloudflare")

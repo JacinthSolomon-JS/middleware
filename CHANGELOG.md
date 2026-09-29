@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Corrected formatted logging calls identified by static analysis.
+- Removed the management bearer token from generated dashboard HTML; the operator now supplies it at runtime and it is retained only for the current browser-tab session.
 
 ### Security
 

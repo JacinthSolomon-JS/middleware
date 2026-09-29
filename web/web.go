@@ -1,13 +1,15 @@
 package web
 
 import (
-	"bytes"
 	_ "embed"
 )
 
 //go:embed index.html
 var IndexHTML []byte
 
-func DashboardHTML(token string) []byte {
-	return bytes.ReplaceAll(IndexHTML, []byte("API_TOKEN"), []byte(token))
+// DashboardHTML returns the static dashboard. Authentication credentials are
+// deliberately never rendered into the page; the operator supplies a token at
+// runtime and the browser retains it only for the current tab session.
+func DashboardHTML() []byte {
+	return IndexHTML
 }

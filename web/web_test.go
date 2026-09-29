@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-func TestDashboardHTMLInjectsToken(t *testing.T) {
-	got := DashboardHTML("test-token-123")
-	if bytes.Contains(got, []byte("API_TOKEN")) {
-		t.Fatal("dashboard still contains the API token placeholder")
+func TestDashboardHTMLDoesNotExposeServerToken(t *testing.T) {
+	got := DashboardHTML()
+	if bytes.Contains(got, []byte("test-token-123")) {
+		t.Fatal("dashboard contains server authentication material")
 	}
-	if !bytes.Contains(got, []byte("test-token-123")) {
-		t.Fatal("dashboard does not contain the injected API token")
+	if !bytes.Contains(got, []byte("gateway_api_token")) {
+		t.Fatal("dashboard does not contain runtime session authentication")
 	}
 }
 
