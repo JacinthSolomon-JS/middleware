@@ -157,6 +157,7 @@ The first query should resolve normally when upstream connectivity is available.
 ## Current verification status
 
 - Unit tests, static analysis, and builds pass on the development toolchain.
+- The complete test suite passes under the Go race detector on Alpine Linux 3.24.2 with CGO enabled.
 - Dashboard integration checks cover API rendering, navigation, filters, policy lists, settings, and mobile layout.
 - Native Linux checks confirmed process startup, API authentication, DNS resolution, configuration changes, graceful shutdown, and firewall cleanup.
 - Inline NFQUEUE acceptance still requires a Linux host or VM whose kernel provides all firewall match modules used by the configured rules.
@@ -165,4 +166,4 @@ The first query should resolve normally when upstream connectivity is available.
 
 - Evaluate nftables-native rule management or eBPF/XDP only as a separately designed migration; the current implementation installs `iptables`/`ip6tables` rules.
 - Benchmark source refresh, SQLite retention, and packet handling under representative gateway traffic.
-- Run the Go race detector on Linux with CGO enabled.
+- Keep the Linux CGO race suite (`./scripts/test-race.sh`) in the regular verification workflow as concurrency coverage expands.

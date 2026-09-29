@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend loading, empty, error, offline, and authentication states.
 - API and embedded-frontend tests for access control, resolver presets, routes, views, and responsive metadata.
 - Comprehensive setup, architecture, configuration, API, security, testing, and deployment documentation.
+- Reproducible Linux/CGO race-detector test script and verified race-clean test run.
 
 ### Changed
 

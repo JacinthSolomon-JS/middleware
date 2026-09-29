@@ -161,6 +161,12 @@ go build ./...
 
 These checks pass. The automated tests cover API bearer authentication, Host validation, resolver presets, embedded frontend delivery, token handling, dashboard views/routes, and responsive metadata.
 
+The race-enabled suite also passes on Alpine Linux 3.24.2 with CGO and the standard C build toolchain:
+
+```bash
+./scripts/test-race.sh
+```
+
 ### Frontend integration checks
 
 The dashboard was run against the API and exercised in a browser for:
@@ -176,7 +182,7 @@ The dashboard was run against the API and exercised in a browser for:
 
 ### Linux runtime checks
 
-A native Linux build was tested in Alpine Linux 3.24.2. The Go tests, vet checks, and binary build passed. Runtime verification confirmed application startup, NFQUEUE connection, dashboard/API authentication, DNS resolution, mode and resolver mutations, graceful shutdown, and firewall cleanup.
+A native Linux build was tested in Alpine Linux 3.24.2. The Go tests, CGO race detector, vet checks, and binary build passed. Runtime verification confirmed application startup, NFQUEUE connection, dashboard/API authentication, DNS resolution, mode and resolver mutations, graceful shutdown, and firewall cleanup.
 
 The WSL test kernel rejected the project's `connbytes` iptables match with exit status 4. That is an environment/kernel capability limitation, not a frontend failure. A final deployment acceptance test should therefore validate inline packet verdicts on the intended physical Linux gateway or VM with the required Netfilter modules enabled.
 
