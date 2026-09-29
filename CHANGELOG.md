@@ -15,6 +15,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Complete responsive management dashboard with overview, analytics, activity logs, security controls, list management, and settings views.
+- Live activity updates over an authenticated WebSocket connection.
+- Frontend loading, empty, error, offline, and authentication states.
+- API and embedded-frontend tests for access control, resolver presets, routes, views, and responsive metadata.
+- Comprehensive setup, architecture, configuration, API, security, testing, and deployment documentation.
+
+### Changed
+
+- Integrated the dashboard directly into the Go binary for a single-artifact deployment.
+- Expanded management workflows for category/source controls, custom sources, resolver selection, and enforce/monitor modes.
+
+### Fixed
+
+- Corrected formatted logging calls identified by static analysis.
+
+### Security
+
+- Added bearer-token authentication, loopback Host validation, constant-time token comparison, and WebSocket origin/subprotocol checks.
+
 ## Template
 
 ## [X.Y.Z] - DD-MM-YYYY or [Unreleased]
