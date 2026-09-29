@@ -79,6 +79,7 @@ Temporary Items
 .env
 .env.local
 .env.*.local
+gateway_token
 
 # Coverage / Test Profile Data
 *.out
