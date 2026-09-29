@@ -54,9 +54,8 @@ func run() error {
 		return fmt.Errorf("database initialization: %w", err)
 	}
 	defer func(db *storage.Database) {
-		err := db.Close()
-		if err != nil {
-
+		if err := db.Close(); err != nil {
+			log.Printf("[WARNING] Database close failed: %v", err)
 		}
 	}(db)
 
@@ -218,9 +217,8 @@ func run() error {
 		return fmt.Errorf("open NFQUEUE: %w", err)
 	}
 	defer func(nf *nfqueue.Nfqueue) {
-		err := nf.Close()
-		if err != nil {
-
+		if err := nf.Close(); err != nil {
+			log.Printf("[WARNING] NFQUEUE close failed: %v", err)
 		}
 	}(nf)
 

@@ -68,7 +68,9 @@ func (h *NFQueueHandler) HandlePacket(nf verdictSetter, a nfqueue.Attribute) int
 			return
 		}
 		settled = true
-		_ = nf.SetVerdict(id, v)
+		if err := nf.SetVerdict(id, v); err != nil {
+			log.Printf("[NFQUEUE ERROR] failed to set verdict %d for packet %d: %v", v, id, err)
+		}
 	}
 
 	// A panic must never leave the packet unresolved

@@ -3,14 +3,22 @@ package api
 import (
 	"crypto/subtle"
 	"encoding/json"
+	"errors"
 	"log"
 	"middleware/pkg/storage"
+	"net"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
+
+func closeWebSocket(context string, conn *websocket.Conn) {
+	if err := conn.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
+		log.Printf("[WS WARNING] failed to close %s: %v", context, err)
+	}
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -143,10 +151,12 @@ func (h *WSHub) Run() {
 			h.mu.Unlock()
 			if atCap {
 				h.countReject()
-				c.conn.WriteControl(websocket.CloseMessage,
+				if err := c.conn.WriteControl(websocket.CloseMessage,
 					websocket.FormatCloseMessage(websocket.ClosePolicyViolation,
-						"client limit reached"), time.Now().Add(hubWriteWait))
-				c.conn.Close()
+						"client limit reached"), time.Now().Add(hubWriteWait)); err != nil {
+					log.Printf("[WS WARNING] failed to send client-limit close frame: %v", err)
+				}
+				closeWebSocket("rejected client", c.conn)
 				continue
 			}
 			go c.writePump()
@@ -155,6 +165,7 @@ func (h *WSHub) Run() {
 		case event := <-h.broadcast:
 			msg, err := json.Marshal(event)
 			if err != nil {
+				log.Printf("[WS ERROR] failed to encode broadcast event: %v", err)
 				continue
 			}
 			h.mu.Lock()
@@ -185,7 +196,7 @@ func (h *WSHub) unregisterClient(c *wsClient) {
 	}
 	delete(h.clients, c)
 	h.mu.Unlock()
-	c.conn.Close()
+	closeWebSocket("unregistered client", c.conn)
 }
 
 func (h *WSHub) Broadcast(event storage.LogEvent) {
@@ -233,7 +244,7 @@ func (h *WSHub) Stop() {
 	}
 	h.mu.Unlock()
 	for _, c := range clients {
-		c.conn.Close()
+		closeWebSocket("client during hub shutdown", c.conn)
 	}
 }
 
@@ -279,16 +290,24 @@ func (c *wsClient) writePump() {
 	for {
 		select {
 		case msg, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(c.writeWait))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(c.writeWait)); err != nil {
+				log.Printf("[WS WARNING] failed to set client write deadline: %v", err)
+				return
+			}
 			if !ok {
 				return
 			}
 			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+				log.Printf("[WS WARNING] failed to write client message: %v", err)
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(c.writeWait))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(c.writeWait)); err != nil {
+				log.Printf("[WS WARNING] failed to set ping write deadline: %v", err)
+				return
+			}
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Printf("[WS WARNING] failed to write client ping: %v", err)
 				return
 			}
 		}
@@ -299,17 +318,23 @@ func (c *wsClient) writePump() {
 func (c *wsClient) readPump() {
 	defer func() {
 		c.hub.unregisterClient(c)
-		c.conn.Close()
+		closeWebSocket("reader client", c.conn)
 	}()
 
 	c.conn.SetReadLimit(hubMaxMessageBytes)
-	c.conn.SetReadDeadline(time.Now().Add(c.pongWait))
+	if err := c.conn.SetReadDeadline(time.Now().Add(c.pongWait)); err != nil {
+		log.Printf("[WS WARNING] failed to set client read deadline: %v", err)
+		return
+	}
 	c.conn.SetPongHandler(func(string) error {
 		c.conn.SetReadDeadline(time.Now().Add(c.pongWait))
 		return nil
 	})
 	for {
 		if _, _, err := c.conn.ReadMessage(); err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				log.Printf("[WS WARNING] client read failed: %v", err)
+			}
 			return
 		}
 	}

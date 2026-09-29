@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -28,6 +29,12 @@ import (
 const maxFeedBodyBytes = 32 << 20 // 32 MiB cap on feed downloads
 
 var sourceIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,63}$`)
+
+func closeResource(resource string, closer io.Closer) {
+	if err := closer.Close(); err != nil {
+		log.Printf("[WARNING] - BlocklistManager: failed to close %s: %v", resource, err)
+	}
+}
 
 type BlocklistConfig struct {
 	Version     string            `yaml:"version"`
@@ -202,7 +209,7 @@ func (b *BlocklistManagerModule) LoadConfigFromFile(filePath string) error {
 			if file, err := os.Open(s.Path); err == nil {
 				s.Cache = parseHostFormat(file)
 				s.DomainCount = len(s.Cache)
-				file.Close()
+				closeResource(s.Path, file)
 			}
 		}
 		if len(s.Cache) == 0 {
@@ -210,7 +217,7 @@ func (b *BlocklistManagerModule) LoadConfigFromFile(filePath string) error {
 			if file, err := os.Open(b.cachePathFor(s.ID)); err == nil {
 				s.Cache = parseHostFormat(file)
 				s.DomainCount = len(s.Cache)
-				file.Close()
+				closeResource(b.cachePathFor(s.ID), file)
 			}
 		}
 
@@ -255,7 +262,7 @@ func (b *BlocklistManagerModule) applyPersistedState(sources map[string]*Blockli
 			if file, err := os.Open(b.cachePathFor(c.ID)); err == nil {
 				s.Cache = parseHostFormat(file)
 				s.DomainCount = len(s.Cache)
-				file.Close()
+				closeResource(b.cachePathFor(c.ID), file)
 			}
 			sources[s.ID] = s
 		}
@@ -433,7 +440,7 @@ func (b *BlocklistManagerModule) ImportFile(id string, name string, filePath str
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer closeResource(filePath, file)
 
 	domains := parseHostFormat(file)
 
@@ -568,7 +575,7 @@ func (b *BlocklistManagerModule) fetchFileSource(id, srcURL, path string) ([]str
 	if err != nil {
 		return nil, fmt.Errorf("failed to open local list %s: %w", path, err)
 	}
-	defer file.Close()
+	defer closeResource(path, file)
 	return parseHostFormat(file), nil
 }
 
@@ -578,7 +585,7 @@ func (b *BlocklistManagerModule) downloadFeed(id, srcURL string) ([]string, erro
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer closeResource("response body for "+srcURL, resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("[ERROR]: HTTP error %d fetching %s", resp.StatusCode, srcURL)
@@ -649,8 +656,7 @@ func (b *BlocklistManagerModule) writeCache(id string, domains []string) error {
 
 	for _, d := range domains {
 		if _, err := f.WriteString(d + "\n"); err != nil {
-			f.Close()
-			return err
+			return errors.Join(err, f.Close())
 		}
 	}
 	if err := f.Close(); err != nil {
@@ -822,7 +828,7 @@ func (b *BlocklistManagerModule) rebuildRulesLocked() {
 			if file, err := os.Open(path); err == nil {
 				src.Cache = parseHostFormat(file)
 				src.DomainCount = len(src.Cache)
-				file.Close()
+				closeResource(path, file)
 			}
 		}
 

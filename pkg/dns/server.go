@@ -199,10 +199,13 @@ func (s *Server) Start() error {
 	if err := <-errs; err != nil {
 		// A failed bind on one listener must not leave a half-open resolver:
 		// stop the sibling and report.
+		shutdownErrs := []error{err}
 		for _, srv := range servers {
-			_ = srv.Shutdown()
+			if shutdownErr := srv.Shutdown(); shutdownErr != nil {
+				shutdownErrs = append(shutdownErrs, fmt.Errorf("shutdown DNS listener %s: %w", srv.Addr, shutdownErr))
+			}
 		}
-		return err
+		return errors.Join(shutdownErrs...)
 	}
 	return nil
 }

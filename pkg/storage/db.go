@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -17,6 +18,23 @@ const (
 	purgeInterval      = 5 * time.Minute
 	maxDropLogInterval = time.Second
 )
+
+type errorCloser interface {
+	Close() error
+}
+
+func closeWithLog(resource string, closer errorCloser) {
+	if err := closer.Close(); err != nil {
+		log.Printf("[WARNING] failed to close %s: %v", resource, err)
+	}
+}
+
+func rollbackError(tx *sql.Tx, cause error) error {
+	if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+		return errors.Join(cause, fmt.Errorf("transaction rollback: %w", err))
+	}
+	return cause
+}
 
 // LogEvent represents a single traffic event for logging in database
 type LogEvent struct {
@@ -260,10 +278,12 @@ func (s *Database) flushBatch(batch []LogEvent) {
 	`)
 	if err != nil {
 		log.Printf("[ERROR] failed to prepare statement: %v", err)
-		tx.Rollback()
+		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			log.Printf("[ERROR] failed to roll back log transaction: %v", rollbackErr)
+		}
 		return
 	}
-	defer stmt.Close()
+	defer closeWithLog("traffic log statement", stmt)
 
 	var total, blocked, allowed int64
 	for _, e := range batch {
@@ -452,18 +472,18 @@ func (s *Database) EraseLogs() (int64, error) {
 
 	res, err := tx.Exec(`DELETE FROM traffic_logs`)
 	if err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("EraseLogs: Delete: %w", err)
+		return 0, rollbackError(tx, fmt.Errorf("EraseLogs: Delete: %w", err))
 	}
-	deleted, _ := res.RowsAffected()
+	deleted, err := res.RowsAffected()
+	if err != nil {
+		return 0, rollbackError(tx, fmt.Errorf("EraseLogs: RowsAffected: %w", err))
+	}
 
 	if _, err := tx.Exec(`DELETE FROM sqlite_sequence WHERE name = 'traffic_logs'`); err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("EraseLogs: Reset Sequence: %w", err)
+		return 0, rollbackError(tx, fmt.Errorf("EraseLogs: Reset Sequence: %w", err))
 	}
 	if _, err := tx.Exec(`UPDATE summary_stats SET total = 0, blocked = 0, allowed = 0 WHERE id = 1`); err != nil {
-		tx.Rollback()
-		return 0, fmt.Errorf("EraseLogs: Reset Summary: %w", err)
+		return 0, rollbackError(tx, fmt.Errorf("EraseLogs: Reset Summary: %w", err))
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -515,7 +535,7 @@ func (s *Database) QueryLogs(limit, offset int, action string) ([]LogEvent, erro
 	if err != nil {
 		return nil, fmt.Errorf("QueryLogs: %w", err)
 	}
-	defer rows.Close()
+	defer closeWithLog("traffic log rows", rows)
 
 	var out []LogEvent
 	for rows.Next() {
@@ -590,7 +610,7 @@ func (s *Database) AllSettings() (map[string]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("AllSettings: %w", err)
 	}
-	defer rows.Close()
+	defer closeWithLog("settings rows", rows)
 	out := make(map[string]string)
 	for rows.Next() {
 		var k, v string
@@ -608,7 +628,7 @@ func (s *Database) ListDynamicDomains() ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ListDynamicDomains: %w", err)
 	}
-	defer rows.Close()
+	defer closeWithLog("dynamic-domain rows", rows)
 	var out []string
 	for rows.Next() {
 		var d string
@@ -647,7 +667,7 @@ func (s *Database) ListDynamicIPs() ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ListDynamicIPs: %w", err)
 	}
-	defer rows.Close()
+	defer closeWithLog("dynamic-IP rows", rows)
 	var out []string
 	for rows.Next() {
 		var a string
@@ -686,7 +706,7 @@ func (s *Database) ListAllowlistDomains() ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ListAllowlistDomains: %w", err)
 	}
-	defer rows.Close()
+	defer closeWithLog("allowlist rows", rows)
 	var out []string
 	for rows.Next() {
 		var d string
@@ -725,7 +745,7 @@ func (s *Database) ListSourceToggles() (map[string]bool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ListSourceToggles: %w", err)
 	}
-	defer rows.Close()
+	defer closeWithLog("source-toggle rows", rows)
 	out := make(map[string]bool)
 	for rows.Next() {
 		var id string
@@ -761,7 +781,7 @@ func (s *Database) ListCustomSources() ([]CustomSource, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ListCustomSources: %w", err)
 	}
-	defer rows.Close()
+	defer closeWithLog("custom-source rows", rows)
 	var out []CustomSource
 	for rows.Next() {
 		var c CustomSource
