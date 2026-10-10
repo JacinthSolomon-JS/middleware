@@ -533,8 +533,8 @@ sources:
   #
   # Each source is file-type: its HTTPS feed is imported into the local path
   # on first enable and re-imported every 2 hours while enabled. Bad or empty
-  # downloads never replace a good local file (KI-11). Toggle state persists
-  # across restarts via source_toggles (KI-15).
+  # downloads never replace a good local file. Toggle state persists
+  # across restarts via source_toggles.
 
   - id: "tel-msft"
     name: "Microsoft Telemetry (Windows/Office)"
