@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Gateway | Secure Login</title>
+    <link rel="stylesheet" href="/assets/css/auth.css">
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+
+        <div class="logo">⬡</div>
+
+        <h1 id="heading">Welcome Back</h1>
+        <p id="subtitle">Sign in to your Security Gateway</p>
+
+        <form id="authForm">
+
+            <div class="field">
+                <label>Username</label>
+                <input
+                    id="username"
+                    type="text"
+                    minlength="3"
+                    maxlength="32"
+                    autocomplete="username"
+                    required
+                >
+            </div>
+
+            <div class="field">
+                <label>Password</label>
+                <input
+                    id="password"
+                    type="password"
+                    minlength="12"
+                    maxlength="128"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <div class="field" id="confirmField" hidden>
+                <label>Confirm Password</label>
+                <input
+                    id="confirmPassword"
+                    type="password"
+                    minlength="12"
+                    maxlength="128"
+                    autocomplete="new-password"
+                >
+            </div>
+
+            <p id="message" role="alert"></p>
+
+            <button id="submitBtn" type="submit">
+                Sign In
+            </button>
+
+        </form>
+
+        <div class="footer">
+            IoT Security Gateway
+            <span>Protected Access</span>
+        </div>
+
+    </div>
+</div>
+
+<script src="/assets/js/auth.js" defer></script>
+
+</body>
+</html>
